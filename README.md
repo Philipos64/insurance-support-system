@@ -68,7 +68,7 @@ full conversation, one agent's context cannot contaminate another's lookup.
 | Structured data | PostgreSQL 17 (Docker, `pgvector/pgvector:pg17`) |
 | Vector store | ChromaDB (persistent, local) |
 | DB driver | Psycopg 3 (binary) |
-| Interface | Streamlit, with a live execution-trace panel |
+| Interface | FastAPI (SSE streaming) + hand-written HTML/CSS/JS |
 
 ---
 
@@ -94,11 +94,11 @@ python database.py
 # 5. Build the FAQ vector store (downloads a dataset, takes a minute)
 python setup_rag.py
 
-# 6. Launch the chat interface
-streamlit run gui.py
+# 6. Launch the app
+python api.py
 ```
 
-Then open <http://localhost:8501>.
+Then open <http://localhost:8000>.
 
 To verify the database connection on its own: `python test_connection.py`
 
@@ -112,8 +112,21 @@ To verify the database connection on its own: `python test_connection.py`
 | `What does a standard auto policy cover?` | RAG over the FAQ store |
 | `How much is the bill for POL000001 and what payment methods do you accept?` | multi-step plan: billing **+** RAG |
 
-The sidebar has a **Super Debugger** mode that shows the raw `GraphState` at every node and labels
-each step as an API call or local execution — useful for seeing the plan get built and consumed.
+### Two views
+
+The interface has a **Customer** view — an ordinary chat window — and a **Developer** view that
+shows the same conversation alongside a live execution trace. The trace streams in as the graph
+runs and, for each turn, shows:
+
+- the **flow chain** of every node the request passed through, in order
+- the planner's reasoning and the **JSON plan** it produced, before any of it executes
+- each dispatch: which worker was chosen, and the isolated task string it received
+- the SQL result each worker returned, and the query and documents RAG retrieved
+- per-node timing, and whether the step was an **API call** or **local execution**
+
+A **Raw state** toggle expands the complete `GraphState` after every node. Because the plan is
+produced as data before execution, the trace shows what the system intended to do next to the same
+detail as what it actually did.
 
 ---
 
@@ -136,7 +149,8 @@ prompts.py          System prompts for planner, RAG specialist, answer agent
 agent_tools.py      SQL handlers for policy / billing / claims lookups
 database.py         Schema definition and synthetic data generation
 setup_rag.py        Builds the ChromaDB FAQ vector store
-gui.py              Streamlit interface with live execution trace
+api.py              FastAPI app: serves the frontend, streams graph events (SSE)
+static/             Frontend - index.html, style.css, app.js (no framework)
 test_connection.py  Standalone database connectivity check
 docker-compose.yml  PostgreSQL 17 + pgvector
 data/               Hand-written demo FAQs (JSON)

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insurance Support System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true"></div>
+    <div class="brand-text">
+      <h1>Insurance Support</h1>
+      <p>Plan-and-execute multi-agent system</p>
+    </div>
+  </div>
+
+  <div class="view-switch" role="group" aria-label="View mode">
+    <button type="button" class="view-btn is-active" data-view="customer">Customer</button>
+    <button type="button" class="view-btn" data-view="developer">Developer</button>
+  </div>
+</header>
+
+<main class="layout" data-view="customer">
+
+  <!-- ============ CHAT ============ -->
+  <section class="panel chat-panel">
+    <div class="panel-head">
+      <h2>Conversation</h2>
+      <button type="button" id="reset" class="ghost-btn">Clear</button>
+    </div>
+
+    <div id="messages" class="messages" aria-live="polite"></div>
+
+    <div id="status" class="status" hidden>
+      <span class="spinner" aria-hidden="true"></span>
+      <span id="status-text">Working…</span>
+    </div>
+
+    <form id="composer" class="composer" autocomplete="off">
+      <input id="input" type="text" placeholder="Ask about a policy, bill, or claim…" required>
+      <button type="submit" id="send">Send</button>
+    </form>
+
+    <div class="samples">
+      <span class="samples-label">Try</span>
+      <button type="button" class="chip" data-q="Is policy POL000002 currently active?">single lookup</button>
+      <button type="button" class="chip" data-q="How much is the bill for POL000001 and what is the status of claim CLM000005?">two lookups</button>
+      <button type="button" class="chip" data-q="What is covered under a standard auto insurance policy?">knowledge base</button>
+      <button type="button" class="chip" data-q="Is policy POL000002 active and what does a standard auto policy cover?">database + knowledge</button>
+    </div>
+  </section>
+
+  <!-- ============ TRACE ============ -->
+  <section class="panel trace-panel">
+    <div class="panel-head">
+      <h2>Execution trace</h2>
+      <label class="raw-toggle">
+        <input type="checkbox" id="show-raw">
+        <span>Raw state</span>
+      </label>
+    </div>
+
+    <div id="trace" class="trace">
+      <p class="empty">Send a message to watch the orchestration run.</p>
+    </div>
+  </section>
+
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

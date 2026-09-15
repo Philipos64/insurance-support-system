@@ -70,8 +70,8 @@ happen*, but it no longer has an open-ended way to make it happen.
 
 **Planning is a separate, inspectable step.** The planner's only output is a JSON plan —
 `[{agent, task}, ...]` plus a justification. The plan is data, produced before anything executes,
-so it can be logged, displayed, or validated before a single query runs. The Streamlit trace panel
-renders it for exactly this reason.
+so it can be logged, displayed, or validated before a single query runs. The Developer view renders
+it for exactly this reason — you can read the plan before any of it executes.
 
 **Execution is bounded.** The dispatcher pops one task per iteration off a finite list. The plan
 only shrinks. Work terminates when the list empties rather than when a model decides it is
@@ -150,8 +150,8 @@ history = state.get("conversation_history", f"User: {state['user_input']}")
 ```
 
 The fallback only fires when the key is *absent*. A caller passing `conversation_history=""` gives
-the planner an empty prompt, so it returns an empty plan and terminates immediately. `gui.py`
-always passes a non-empty string, so the interface hides this; it only appears when calling the
+the planner an empty prompt, so it returns an empty plan and terminates immediately. `api.py`
+always builds a non-empty string, so the interface hides this; it only appears when calling the
 graph directly. The fix is to treat empty as missing — `state.get(...) or f"User: ..."`.
 
 **Strict ID matching.** `policy 1`, `POL 000001` and `pol000001` are not recognised. This is the
@@ -162,8 +162,9 @@ people actually type. Normalising input before the regex is the obvious next ste
 query to an authenticated customer; strict ID matching limits casual browsing but is not access
 control.
 
-**No persistence.** Conversation state lives in Streamlit's `session_state`. Refreshing loses the
-thread — there is no checkpointer and no per-user memory.
+**No persistence.** The API is stateless: the browser holds the conversation history and sends it
+with each request. Refreshing the page loses the thread — there is no checkpointer, no server-side
+session, and no per-user memory.
 
 **Iteration cap is a safety net, not a policy.** Escalation to `human_handoff` after 7 iterations
 prevents runaway execution, but a real system would distinguish "stuck in a loop" from "this user
@@ -180,6 +181,6 @@ next improvement.
 
 Failures were found by running queries and reading the full execution trace: each routing decision
 with its stated reasoning, the SQL each worker ran, and the documents RAG retrieved. The
-**Super Debugger** view in `gui.py` was built for this — it renders the raw `GraphState` after every
-node and labels each step as an API call or local execution, which is how the context-pollution
-loop in §1 was first identified.
+Developer view was built for this — the trace streams each node as it executes, showing the plan,
+every dispatch, the SQL results, and the raw `GraphState` behind a toggle, with each step labelled
+as an API call or local execution. That is how the context-pollution loop in §1 was identified.
