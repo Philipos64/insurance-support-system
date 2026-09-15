@@ -345,7 +345,12 @@ $("#reset").addEventListener("click", () => {
   turnCount = 0;
   messages.innerHTML = "";
   trace.innerHTML = "";
-  trace.append(el("p", "empty", "Send a message to watch the orchestration run."));
+  const empty = el("div", "empty");
+  empty.append(el("p", "empty-title", "No execution yet"));
+  empty.append(el("p", "empty-body",
+    "Send a message to watch the graph run. Each node appears here as it executes, " +
+    "with the plan it produced, the task it received, and what it returned."));
+  trace.append(empty);
   greet();
 });
 

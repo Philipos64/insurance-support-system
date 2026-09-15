@@ -16,8 +16,7 @@ from dotenv import load_dotenv
 
 # Import updated prompts
 from prompts import (
-    PLANNER_PROMPT, RAG_SPECIALIST_PROMPT, HUMAN_HANDOFF_PROMPT,
-    ANSWER_AGENT_PROMPT
+    PLANNER_PROMPT, RAG_SPECIALIST_PROMPT, ANSWER_AGENT_PROMPT
 )
 
 # Import database tools
@@ -327,7 +326,12 @@ def rag_specialist_node(state: GraphState):
 
 
 def human_handoff_node(state: GraphState):
-    """Handles explicit requests for human representatives."""
+    """Handles explicit requests for human representatives.
+
+    Deliberately deterministic: escalation is a fixed response, not a
+    generated one. There is nothing for a model to decide here, and a
+    guaranteed message is worth more than a fluent one.
+    """
     msg = "I understand. I will transfer you to a human representative immediately."
     return {"final_answer": msg}
 

@@ -100,15 +100,3 @@ The data gathered strictly from the workers is:
 
 Final response:
 """
-
-# =================================================================
-# 4. HUMAN HANDOFF
-# =================================================================
-HUMAN_HANDOFF_PROMPT = """
-You are handling a **Customer Escalation**.
-
-Conversation History: {conversation_history}
-
-Respond empathetically, acknowledge the request for a human, and confirm that a human representative will join shortly.
-Don't attempt to answer any questions or provide information yourself.
-"""

@@ -11,10 +11,9 @@
 
 <header class="topbar">
   <div class="brand">
-    <div class="brand-mark" aria-hidden="true"></div>
     <div class="brand-text">
       <h1>Insurance Support</h1>
-      <p>Plan-and-execute multi-agent system</p>
+      <p>plan-and-execute workflow</p>
     </div>
   </div>
 
@@ -66,7 +65,11 @@
     </div>
 
     <div id="trace" class="trace">
-      <p class="empty">Send a message to watch the orchestration run.</p>
+      <div class="empty">
+        <p class="empty-title">No execution yet</p>
+        <p class="empty-body">Send a message to watch the graph run. Each node appears here as it
+        executes, with the plan it produced, the task it received, and what it returned.</p>
+      </div>
     </div>
   </section>
 

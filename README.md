@@ -1,12 +1,21 @@
-# Insurance Support System — a Plan-and-Execute Multi-Agent Architecture
+# Insurance Support — a Plan-and-Execute Compound AI System
 
-A customer-support system for an insurance company, built as a **compound AI system**: a planner
-LLM decomposes each request into isolated sub-tasks, a dispatcher routes them to specialised
-workers, and an answer agent synthesises the collected evidence into a single reply.
+A customer-support system for an insurance company. A planner LLM decomposes each request into
+isolated sub-tasks, a dispatcher routes them to specialised workers, and an answer agent
+synthesises the collected evidence into a single reply.
 
-The design goal was to keep the LLM in charge of *routing* while keeping data retrieval
-**deterministic** — database lookups are plain SQL behind regex extraction, not tool-calling
-guesswork. This keeps answers grounded and makes failures debuggable.
+**This began as a multi-agent system and was deliberately rewritten into a constrained workflow.**
+The agent version routed by reading the whole conversation on every turn, which made it
+unpredictable, prone to loops, and exposed to prompt injection — the system made control-flow
+decisions by reading untrusted text. Those are the wrong properties for something framed as a
+product, so the autonomy was engineered out on purpose.
+
+What remains keeps the LLM in charge of *routing* while making data retrieval **deterministic**:
+lookups are plain parameterised SQL behind regex extraction, not tool-calling guesswork. Answers
+stay grounded and failures stay debuggable. The trade — less autonomy, more predictability — is
+the central design decision, and it is argued in full in
+[docs/design-notes.md](docs/design-notes.md), including an honest answer to whether this still
+counts as a multi-agent system.
 
 ![Architecture](architecture.png)
 

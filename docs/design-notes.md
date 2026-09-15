@@ -3,7 +3,8 @@
 This project was first built the conventional way: a **supervisor agent** that read the
 conversation on every turn and decided, in free text, which specialist should handle it. That
 version worked in demos and was replaced anyway. This document explains why, what the current
-design constrains, and what it still does not solve.
+design constrains, whether the result still counts as a multi-agent system (§2), and what it
+still does not solve.
 
 ---
 
@@ -63,7 +64,47 @@ cooperative users.
 
 ---
 
-## 2. What the current design constrains
+## 2. Is this a multi-agent system?
+
+Not in the strict sense, and the name was changed to stop implying otherwise.
+
+The useful distinction is between a **workflow**, where LLMs and tools are orchestrated through
+predefined code paths, and an **agent**, where the LLM directs its own process and decides its own
+tool use. By that line this is a workflow. Control flow is a fixed graph, the plan is data consumed
+by a dispatcher loop, and no component chooses its own actions at runtime.
+
+Counting what the eight nodes actually do:
+
+| Node | Calls an LLM? | What it does |
+|---|---|---|
+| `planner_agent` | yes | Emits a JSON plan |
+| `workflow_dispatcher` | no | Pops one task off a list |
+| `policy_worker` | no | Regex, then one `SELECT` |
+| `billing_worker` | no | Regex, then one `SELECT` |
+| `claims_worker` | no | Regex, then one `SELECT` |
+| `rag_specialist` | yes | Vector search, then summarise |
+| `human_handoff` | no | Returns a fixed string |
+| `answer_agent` | yes | Synthesises the reply |
+
+**Three of eight nodes involve a model.** The three components a multi-agent framing would call
+agents — policy, billing, claims — never see one. They do not reason, hold goals, or select tools.
+They are functions, which is why they are named `_worker` rather than `_agent`.
+
+So the accurate description is a **plan-and-execute compound AI system**: several specialised
+components coordinated by an LLM router, most of them deterministic.
+
+This is worth stating plainly rather than leaving for a reader to discover, because the honest
+version is the more interesting claim. The project did not fail to become a multi-agent system. It
+was one, and the agency was removed on purpose once the agent version proved loop-prone and
+injection-exposed. Trading autonomy for predictability is the entire point of §1 and §3 — keeping
+"multi-agent" in the title would have advertised the property that was deliberately given up.
+
+The residual `_agent` suffixes on the planner and answer nodes are kept because they do involve a
+model, and because renaming every symbol would have made the git history harder to follow.
+
+---
+
+## 3. What the current design constrains
 
 The rewrite deliberately trades autonomy for predictability. The LLM still decides *what should
 happen*, but it no longer has an open-ended way to make it happen.
@@ -97,7 +138,7 @@ cannot leak into its lookup — which is what broke the supervisor version.
 
 ---
 
-## 3. Prompt-injection posture
+## 4. Prompt-injection posture
 
 The structural argument is the real one: injected instructions have nowhere useful to land. A
 worker's behaviour is determined by a regex and a fixed SQL statement, so persuading the model of
@@ -147,7 +188,7 @@ nothing found by hand has corrupted the output or changed data.
 
 ---
 
-## 4. Known limitations
+## 5. Known limitations
 
 **Compound questions are sometimes under-planned.** The planner occasionally emits a one-step plan
 for a two-part question:
@@ -199,7 +240,7 @@ next improvement.
 
 ---
 
-## 5. How this was tested
+## 6. How this was tested
 
 Failures were found by running queries and reading the full execution trace: each routing decision
 with its stated reasoning, the SQL each worker ran, and the documents RAG retrieved. The
