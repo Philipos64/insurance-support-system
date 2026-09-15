@@ -13,6 +13,45 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# ---------------------------------------------------------------
+# Statements are named so the interface can show exactly what ran.
+# Every one is parameterised: user text can only ever be a value,
+# never syntax. See docs/design-notes.md.
+# ---------------------------------------------------------------
+
+SQL_POLICY_DETAILS = """
+                SELECT p.policy_type, p.status, c.first_name, c.last_name, c.email
+                FROM policies p
+                JOIN customers c ON p.customer_id = c.customer_id
+                WHERE p.policy_number = %s
+            """
+
+SQL_CLAIM_BY_ID = """
+                    SELECT claim_id, status, estimated_loss, incident_type
+                    FROM claims WHERE claim_id = %s
+                """
+
+SQL_CLAIMS_BY_POLICY = """
+                    SELECT claim_id, status, estimated_loss, incident_type
+                    FROM claims WHERE policy_number = %s LIMIT 3
+                """
+
+SQL_BILLING_PENDING = """
+                SELECT status, amount_due, due_date
+                FROM billing
+                WHERE policy_number = %s AND status = 'pending'
+                ORDER BY due_date DESC LIMIT 1
+            """
+
+# Maps a tool name to the statement(s) it can issue, for the trace view.
+TOOL_SQL = {
+    "get_policy_details": {"by policy_number": SQL_POLICY_DETAILS},
+    "get_claim_status": {"by claim_id": SQL_CLAIM_BY_ID,
+                         "by policy_number": SQL_CLAIMS_BY_POLICY},
+    "get_billing_info": {"by policy_number": SQL_BILLING_PENDING},
+}
+
 # --- TOOL 1: Ask User ---
 def ask_user(question: str, missing_info: str = ""):
     """Ask the user for input and return the response."""
@@ -26,12 +65,7 @@ def get_policy_details(policy_number: str) -> Dict[str, Any]:
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             # We perform an explicit SELECT to get exactly what we need
-            cursor.execute("""
-                SELECT p.policy_type, p.status, c.first_name, c.last_name, c.email
-                FROM policies p
-                JOIN customers c ON p.customer_id = c.customer_id
-                WHERE p.policy_number = %s
-            """, (policy_number,))
+            cursor.execute(SQL_POLICY_DETAILS, (policy_number,))
             result = cursor.fetchone()
 
             if result:
@@ -55,10 +89,7 @@ def get_claim_status(claim_id: str = None, policy_number: str = None) -> Dict[st
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             if claim_id:
-                cursor.execute("""
-                    SELECT claim_id, status, estimated_loss, incident_type
-                    FROM claims WHERE claim_id = %s
-                """, (claim_id,))
+                cursor.execute(SQL_CLAIM_BY_ID, (claim_id,))
                 result = cursor.fetchone()
                 if result:
                      return {
@@ -68,10 +99,7 @@ def get_claim_status(claim_id: str = None, policy_number: str = None) -> Dict[st
                          "type": result[3]
                      }
             elif policy_number:
-                cursor.execute("""
-                    SELECT claim_id, status, estimated_loss, incident_type
-                    FROM claims WHERE policy_number = %s LIMIT 3
-                """, (policy_number,))
+                cursor.execute(SQL_CLAIMS_BY_POLICY, (policy_number,))
                 results = cursor.fetchall()
                 if results:
                     return [
@@ -88,12 +116,7 @@ def get_billing_info(policy_number: str = None) -> Dict[str, Any]:
 
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("""
-                SELECT status, amount_due, due_date
-                FROM billing
-                WHERE policy_number = %s AND status = 'pending'
-                ORDER BY due_date DESC LIMIT 1
-            """, (policy_number,))
+            cursor.execute(SQL_BILLING_PENDING, (policy_number,))
             result = cursor.fetchone()
 
             if result:

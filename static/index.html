@@ -25,6 +25,15 @@
 
 <main class="layout" data-view="customer">
 
+  <!-- ============ INSPECT (takes over the chat column) ============ -->
+  <section class="panel inspect-panel" id="inspect" hidden>
+    <div class="panel-head">
+      <h2>Step detail</h2>
+      <button type="button" id="inspect-close" class="ghost-btn">Back to conversation</button>
+    </div>
+    <div id="inspect-body" class="inspect-body"></div>
+  </section>
+
   <!-- ============ CHAT ============ -->
   <section class="panel chat-panel">
     <div class="panel-head">

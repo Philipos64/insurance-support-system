@@ -425,6 +425,90 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   background: color-mix(in srgb, var(--alert) 9%, transparent);
 }
 
+/* ---------------- step inspector ---------------- */
+
+.inspect-btn {
+  appearance: none;
+  font: inherit;
+  font-size: 10.5px;
+  padding: 2px 8px;
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.inspect-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.inspect-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px 16px 22px;
+}
+
+.ins-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 11px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.ins-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1 1 auto;
+}
+
+.ins-block { margin-bottom: 16px; }
+.ins-block:last-child { margin-bottom: 0; }
+
+.ins-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 5px;
+}
+
+.ins-note {
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-faint);
+  border-left: 2px solid var(--border-strong);
+  padding-left: 8px;
+}
+
+.ins-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+
+.ins-empty {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.ins-block pre { max-height: 300px; overflow: auto; }
+
+.ins-sublabel {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-soft);
+  margin: 8px 0 4px;
+}
+.ins-sublabel:first-of-type { margin-top: 0; }
+
 /* ---------------- workflow graph ---------------- */
 
 .graph {

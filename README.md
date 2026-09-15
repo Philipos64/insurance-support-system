@@ -164,6 +164,12 @@ Below it the trace streams in and, for each turn, shows:
 Two toggles sit in the panel header: **Graph** hides the diagram when you only want the log (the
 choice is remembered), and **Raw state** expands the complete `GraphState` after every node.
 
+**Every step has an Inspect button** that opens a deep dive in place of the conversation column:
+what the step received, what it did, and what came back. For an LLM step that means the exact
+prompt sent and the raw response; for a worker it means the task string, the regex, the named SQL
+it can issue, the values bound to it, and the rows returned. The answer agent's view shows the
+complete context it was given — which is the whole of what it can see.
+
 **Clicking a node in the graph jumps to what it did.** Since a node can run several times in one
 turn — the dispatcher usually runs three — repeated clicks cycle through each occurrence in
 execution order, showing a `2 / 3` marker and ringing the card it lands on. Only nodes the current

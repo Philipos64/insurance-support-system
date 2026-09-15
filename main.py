@@ -21,7 +21,7 @@ from prompts import (
 
 # Import database tools
 from agent_tools import (
-    get_policy_details, get_claim_status, get_billing_info
+    get_policy_details, get_claim_status, get_billing_info, TOOL_SQL
 )
 
 # Load environment variables
@@ -64,6 +64,11 @@ class GraphState(TypedDict):
     # Debug / Trace variables
     rag_search_query: Optional[str]
     rag_docs: Optional[str]
+
+    # Per-node inspection record: what the node received and did, as opposed
+    # to what it returned. Consumed by the developer view; the graph itself
+    # never reads it.
+    detail: Optional[Dict[str, Any]]
 
 # ==========================================
 # WORKFLOW NODES
@@ -125,7 +130,15 @@ def planner_agent_node(state: GraphState):
             "plan": plan,
             "justification": decision.get("justification"),
             "n_iteration": n_iter,
-            "conversation_history": history
+            "conversation_history": history,
+            "detail": {
+                "role": "Routes the request. Produces a plan as data; executes nothing.",
+                "model": llm.model_name,
+                "system_prompt": prompt,
+                "user_message": "Analyze the conversation history and create a routing plan.",
+                "raw_response": response.content,
+                "parsed_plan": plan,
+            },
         }
     except Exception as e:
         logger.error(f"Planner parsing error: {e}")
@@ -148,10 +161,27 @@ def workflow_dispatcher_node(state: GraphState):
         return {
             "next_agent": first_agent,
             "task": specific_task,
-            "plan": remaining_plan
+            "plan": remaining_plan,
+            "detail": {
+                "role": "Pops one task off the plan and routes it. Pure Python, no model.",
+                "plan_before": current_plan,
+                "popped": current_step,
+                "plan_after": remaining_plan,
+                "routed_to": first_agent,
+            },
         }
 
-    return {"next_agent": "answer_agent"}
+    return {
+        "next_agent": "answer_agent",
+        "detail": {
+            "role": "Pops one task off the plan and routes it. Pure Python, no model.",
+            "plan_before": current_plan,
+            "popped": None,
+            "plan_after": [],
+            "routed_to": "answer_agent",
+            "note": "Plan is empty - every task has run, so the turn moves to synthesis.",
+        },
+    }
 
 def policy_worker_node(state: GraphState):
     """Deterministic worker node using Regex and Postgres for Policy details."""
@@ -162,11 +192,13 @@ def policy_worker_node(state: GraphState):
     clm_match = re.search(r"CLM\d+", task)
 
     result_texts = []
+    lookups = []
 
     if pol_matches:
         for policy_num in pol_matches:
             try:
                 info = get_policy_details(policy_number=policy_num)
+                lookups.append({"params": [policy_num], "result": info})
                 if "error" in info:
                     result_texts.append(f"Error for {policy_num}: {info['error']}")
                 else:
@@ -191,7 +223,18 @@ def policy_worker_node(state: GraphState):
     return {
         "conversation_history": history + f"\nPolicy Worker: {final_result_text}",
         "messages": [SystemMessage(content=final_result_text)],
-        "agent_responses": state.get("agent_responses", []) + [final_result_text]
+        "agent_responses": state.get("agent_responses", []) + [final_result_text],
+            "detail": {
+                "role": "Deterministic worker. Extracts an ID by regex, then runs one "
+                        "fixed parameterised statement. No model call, no generated SQL.",
+                "task_received": task,
+                "regex": r"POL\d+",
+                "ids_extracted": pol_matches,
+                "tool": "get_policy_details",
+                "sql": TOOL_SQL["get_policy_details"],
+                "rows": lookups,
+                "formatted_output": final_result_text,
+            },
     }
 
 def billing_worker_node(state: GraphState):
@@ -203,11 +246,13 @@ def billing_worker_node(state: GraphState):
     clm_match = re.search(r"CLM\d+", task)
 
     result_texts = []
+    lookups = []
 
     if pol_matches:
         for policy_num in pol_matches:
             try:
                 info = get_billing_info(policy_number=policy_num)
+                lookups.append({"params": [policy_num], "result": info})
                 if "error" in info:
                     result_texts.append(f"Billing Info for {policy_num}: {info['error']}")
                 else:
@@ -231,7 +276,18 @@ def billing_worker_node(state: GraphState):
     return {
         "conversation_history": history + f"\nBilling Worker: {final_result_text}",
         "messages": [SystemMessage(content=final_result_text)],
-        "agent_responses": state.get("agent_responses", []) + [final_result_text]
+        "agent_responses": state.get("agent_responses", []) + [final_result_text],
+            "detail": {
+                "role": "Deterministic worker. Extracts an ID by regex, then runs one "
+                        "fixed parameterised statement. No model call, no generated SQL.",
+                "task_received": task,
+                "regex": r"POL\d+",
+                "ids_extracted": pol_matches,
+                "tool": "get_billing_info",
+                "sql": TOOL_SQL["get_billing_info"],
+                "rows": lookups,
+                "formatted_output": final_result_text,
+            },
     }
 
 def claims_worker_node(state: GraphState):
@@ -243,6 +299,7 @@ def claims_worker_node(state: GraphState):
     policy_matches = re.findall(r"POL\d+", task)
 
     result_texts = []
+    lookups = []
 
     # 1. Look up by Claim ID
     if claim_matches:
@@ -267,6 +324,7 @@ def claims_worker_node(state: GraphState):
         for policy_num in policy_matches:
             try:
                 info = get_claim_status(policy_number=policy_num)
+                lookups.append({"params": [policy_num], "via": "by policy_number", "result": info})
                 if isinstance(info, list):
                     claims_str = "\n".join([f" - {c.get('claim_id')}: {str(c.get('status')).title()} (${c.get('amount')})" for c in info])
                     result_texts.append(f"Recent Claims for {policy_num}:\n{claims_str}")
@@ -290,7 +348,18 @@ def claims_worker_node(state: GraphState):
     return {
         "conversation_history": history + f"\nClaims Worker: {final_result_text}",
         "messages": [SystemMessage(content=final_result_text)],
-        "agent_responses": state.get("agent_responses", []) + [final_result_text]
+        "agent_responses": state.get("agent_responses", []) + [final_result_text],
+        "detail": {
+            "role": "Deterministic worker. Extracts an ID by regex, then runs one "
+                    "fixed parameterised statement. No model call, no generated SQL.",
+            "task_received": task,
+            "regex": r"CLM\d+ | POL\d+",
+            "ids_extracted": claim_matches + policy_matches,
+            "tool": "get_claim_status",
+            "sql": TOOL_SQL["get_claim_status"],
+            "rows": lookups,
+            "formatted_output": final_result_text,
+        },
     }
 
 def rag_specialist_node(state: GraphState):
@@ -321,7 +390,19 @@ def rag_specialist_node(state: GraphState):
         "conversation_history": history + f"\nRAG Specialist: {response.content}",
         "agent_responses": state.get("agent_responses", []) + [response.content],
         "rag_search_query": search_query,
-        "rag_docs": context
+        "rag_docs": context,
+        "detail": {
+            "role": "Vector search over the FAQ store, then one model call to summarise. "
+                    "The planner already shaped the task into a keyword query, so no "
+                    "query-rewriting call is needed.",
+            "model": llm.model_name,
+            "task_received": task,
+            "search_query": search_query,
+            "n_results": 4,
+            "retrieved_documents": results["documents"][0] if results.get("documents") else [],
+            "system_prompt": prompt,
+            "raw_response": response.content,
+        },
     }
 
 
@@ -333,7 +414,16 @@ def human_handoff_node(state: GraphState):
     guaranteed message is worth more than a fluent one.
     """
     msg = "I understand. I will transfer you to a human representative immediately."
-    return {"final_answer": msg}
+    return {
+        "final_answer": msg,
+        "detail": {
+            "role": "Escalation. A fixed string, deliberately not generated - there is "
+                    "nothing for a model to decide, and a guaranteed message is worth "
+                    "more than a fluent one.",
+            "model": None,
+            "response": msg,
+        },
+    }
 
 def answer_agent_node(state: GraphState):
     """Synthesizes the collected data into a conversational response."""
@@ -353,7 +443,19 @@ def answer_agent_node(state: GraphState):
     )
 
     response = llm.invoke([SystemMessage(content=prompt)])
-    return {"final_answer": response.content}
+    return {
+        "final_answer": response.content,
+        "detail": {
+            "role": "Synthesises the reply. Sees the user question and the workers' "
+                    "results - never the conversation history, and never the tools.",
+            "model": llm.model_name,
+            "context_received": agent_responses,
+            "context_source": ("worker results" if agent_responses
+                               else "conversation history (no worker ran)"),
+            "system_prompt": prompt,
+            "raw_response": response.content,
+        },
+    }
 
 
 # ==========================================

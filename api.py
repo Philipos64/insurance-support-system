@@ -90,6 +90,12 @@ def run_turn(message: str, history: str):
                 if "conversation_history" in state_update:
                     updated_history = state_update["conversation_history"]
 
+                # `detail` is the inspection record: what the node received and
+                # did. Split it out of the state so the trace stays readable and
+                # the deep-dive has a stable shape to render.
+                detail = state_update.get("detail")
+                state_only = {k: v for k, v in state_update.items() if k != "detail"}
+
                 yield sse(
                     "node",
                     {
@@ -97,7 +103,8 @@ def run_turn(message: str, history: str):
                         "node": node_name,
                         "kind": "llm" if node_name in LLM_NODES else "local",
                         "elapsed_ms": round((now - last) * 1000),
-                        "state": to_jsonable(state_update),
+                        "state": to_jsonable(state_only),
+                        "detail": to_jsonable(detail) if detail else None,
                     },
                 )
                 last = now

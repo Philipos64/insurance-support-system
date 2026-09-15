@@ -22,6 +22,9 @@ const libList   = $("#library-list");
 const libToggle = $("#toggle-examples");
 const graphBox  = $("#graph");
 const showGraph = $("#show-graph");
+const chatPanel = $(".chat-panel");
+const inspectPanel = $("#inspect");
+const inspectBody = $("#inspect-body");
 
 let history = "";
 let turnCount = 0;
@@ -72,6 +75,7 @@ let cycleIndex = new Map();
 let currentTurnEl = null;
 
 function startTurn(question) {
+  closeInspect();
   Graph.reset();
   turnCards = new Map();
   cycleIndex = new Map();
@@ -188,6 +192,18 @@ function addNode(turn, payload) {
   head.append(el("span", "node-name", humanise(payload.node)));
   head.append(el("span", `badge ${payload.kind}`, payload.kind === "llm" ? "API call" : "local"));
   head.append(el("span", "node-ms", `${payload.elapsed_ms} ms`));
+
+  if (payload.detail) {
+    const btn = el("button", "inspect-btn", "Inspect");
+    btn.type = "button";
+    btn.title = "See what this step received and did";
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openInspect(payload);
+    });
+    head.append(btn);
+  }
+
   card.append(head);
 
   card.append(nodeBody(payload.node, payload.state || {}));
@@ -266,6 +282,142 @@ function finishTurn(summary, data) {
   add("API calls", String(data.llm_calls));
   add("total", `${data.total_ms} ms`);
 }
+
+
+/* ---------------- step inspector ---------------- */
+
+/** Render one labelled block. `mono` renders the value as preformatted text. */
+function block(label, value, { mono = true, note = "" } = {}) {
+  const wrap = el("div", "ins-block");
+  wrap.append(el("div", "ins-label", label));
+  if (note) wrap.append(el("p", "ins-note", note));
+  if (value === null || value === undefined || value === "") {
+    wrap.append(el("p", "ins-empty", "(none)"));
+  } else if (mono) {
+    wrap.append(pre(typeof value === "string" ? value : JSON.stringify(value, null, 2), true));
+  } else {
+    wrap.append(el("p", "ins-text", String(value)));
+  }
+  return wrap;
+}
+
+
+/** Strip the common leading indentation off a block of text. */
+function dedent(text) {
+  const lines = String(text).replace(/\t/g, "    ").split("\n");
+  const indents = lines.filter((l) => l.trim()).map((l) => l.match(/^ */)[0].length);
+  const cut = indents.length ? Math.min(...indents) : 0;
+  return lines.map((l) => l.slice(cut)).join("\n").trim();
+}
+
+/** SQL arrives as {label: statement}. Render each readably, not as JSON. */
+function sqlBlocks(sqlMap, note) {
+  const wrap = el("div", "ins-block");
+  wrap.append(el("div", "ins-label", "SQL it can run"));
+  if (note) wrap.append(el("p", "ins-note", note));
+  const entries = Object.entries(sqlMap || {});
+  if (!entries.length) {
+    wrap.append(el("p", "ins-empty", "(none)"));
+    return wrap;
+  }
+  for (const [label, sql] of entries) {
+    wrap.append(el("div", "ins-sublabel", label));
+    wrap.append(pre(dedent(sql)));
+  }
+  return wrap;
+}
+
+function renderDetail(node, d) {
+  const out = document.createDocumentFragment();
+
+  out.append(block("What this step is", d.role, { mono: false }));
+  if (d.model) out.append(block("Model", d.model, { mono: false }));
+  else if ("model" in d) out.append(block("Model", "none - this step runs no model", { mono: false }));
+
+  if (node === "planner_agent") {
+    out.append(block("Prompt sent", d.system_prompt,
+      { note: "The full system prompt. The conversation is interpolated into it." }));
+    out.append(block("User message", d.user_message));
+    out.append(block("Raw model response", d.raw_response,
+      { note: "Parsed as strict JSON. A parse failure routes straight to the answer agent." }));
+    out.append(block("Parsed plan", d.parsed_plan,
+      { note: "This is data, produced before anything executes." }));
+
+  } else if (node === "workflow_dispatcher") {
+    if (d.note) out.append(block("Note", d.note, { mono: false }));
+    out.append(block("Plan before", d.plan_before));
+    out.append(block("Task taken", d.popped));
+    out.append(block("Plan after", d.plan_after));
+    out.append(block("Routed to", d.routed_to, { mono: false }));
+
+  } else if (node.endsWith("_worker")) {
+    out.append(block("Task received", d.task_received,
+      { note: "The only input. The worker never sees the conversation." }));
+    out.append(block("Extraction pattern", d.regex));
+    out.append(block("IDs extracted", d.ids_extracted));
+    out.append(block("Tool", d.tool, { mono: false }));
+    out.append(sqlBlocks(d.sql,
+      "Fixed statements, parameterised with %s. Nothing is generated or concatenated."));
+    out.append(block("Query parameters and rows", d.rows,
+      { note: "What was bound as a value, and what came back." }));
+    out.append(block("Formatted output", d.formatted_output));
+
+  } else if (node === "rag_specialist") {
+    out.append(block("Task received", d.task_received));
+    out.append(block("Search query", d.search_query,
+      { note: "Used verbatim against the vector store - the planner already shaped it into keywords." }));
+    out.append(block(`Retrieved documents (top ${d.n_results})`, d.retrieved_documents));
+    out.append(block("Prompt sent", d.system_prompt));
+    out.append(block("Raw model response", d.raw_response));
+
+  } else if (node === "answer_agent") {
+    out.append(block("Context received", d.context_received,
+      { note: `Source: ${d.context_source}. This is everything the answer agent can see.` }));
+    out.append(block("Prompt sent", d.system_prompt,
+      { note: "User text sits inside <user_input> and is framed as untrusted data." }));
+    out.append(block("Raw model response", d.raw_response));
+
+  } else if (node === "human_handoff") {
+    out.append(block("Response", d.response,
+      { note: "Returned verbatim. No model call." }));
+
+  } else {
+    out.append(block("Detail", d));
+  }
+  return out;
+}
+
+function openInspect(payload) {
+  inspectBody.innerHTML = "";
+
+  const head = el("div", "ins-head");
+  head.append(el("span", "node-seq", `Step ${payload.seq}`));
+  head.append(el("span", "ins-name", humanise(payload.node)));
+  head.append(el("span", `badge ${payload.kind}`, payload.kind === "llm" ? "API call" : "local"));
+  head.append(el("span", "node-ms", `${payload.elapsed_ms} ms`));
+  inspectBody.append(head);
+
+  try {
+    inspectBody.append(renderDetail(payload.node, payload.detail || {}));
+  } catch (err) {
+    inspectBody.append(block("Could not render this step", String(err), { mono: false }));
+    inspectBody.append(block("Raw detail", payload.detail));
+  }
+
+  inspectBody.scrollTop = 0;
+  chatPanel.hidden = true;
+  inspectPanel.hidden = false;
+}
+
+function closeInspect() {
+  inspectPanel.hidden = true;
+  chatPanel.hidden = false;
+}
+
+$("#inspect-close").addEventListener("click", closeInspect);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !inspectPanel.hidden) closeInspect();
+});
 
 /* ---------------- streaming ---------------- */
 

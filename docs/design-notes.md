@@ -109,6 +109,11 @@ model, and because renaming every symbol would have made the git history harder 
 The rewrite deliberately trades autonomy for predictability. The LLM still decides *what should
 happen*, but it no longer has an open-ended way to make it happen.
 
+Each node also records what it *received*, not just what it returned, and the interface exposes
+that per step: the exact prompt, the named SQL statement, the values bound to it, the rows back.
+The claims in this document are therefore checkable in the running system rather than taken on
+trust.
+
 **Planning is a separate, inspectable step.** The planner's only output is a JSON plan —
 `[{agent, task}, ...]` plus a justification. The plan is data, produced before anything executes,
 so it can be logged, displayed, or validated before a single query runs. The Developer view renders
