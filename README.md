@@ -152,6 +152,8 @@ api.py              FastAPI, serves the frontend and streams the graph events
 static/             the frontend, no framework
 test_connection.py  database connection check
 docker-compose.yml  PostgreSQL 17 + pgvector
+requirements.txt    pinned versions
+architecture.png    the data-flow diagram above
 data/               demo FAQs and the example questions
 docs/design-notes.md  why it's built this way, and what still doesn't work
 ```

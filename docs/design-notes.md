@@ -123,17 +123,22 @@ conversation, or an instruction in English to interpret. It gets one task string
 with a regex, and runs one fixed query:
 
 ```python
-cursor.execute("""
+SQL_CLAIM_BY_ID = """
     SELECT claim_id, status, estimated_loss, incident_type
     FROM claims WHERE claim_id = %s
-""", (claim_id,))
+"""
+
+cursor.execute(SQL_CLAIM_BY_ID, (claim_id,))
 ```
+
+The statements are named constants so the developer view can show you the exact one that ran,
+rather than my description of it.
 
 No query generation, no tool picking at this layer. Everything a worker can do is written out in
 the source and the list is short. Text without a valid ID gets a refusal, not an improvised action.
 
 **Workers are isolated.** A worker only sees its own task string, so a stale ID from three turns
-back can't get into its lookup. That's what broke the supervisor version.
+back can't get into its lookup. The lack of that isolation is what broke the supervisor version.
 
 Each node also records what it received, not just what it returned, and the interface shows that
 per step: the exact prompt, the SQL, the value bound to it, the rows back. So you can check these
@@ -238,7 +243,19 @@ turn the notes in this document into a regression test. That's the clearest next
 ## 6. How I tested it
 
 By running queries and reading the whole trace: each routing decision with the reason it gave, the
-SQL each worker ran, and the documents RAG pulled back. The developer view exists because of this.
-It streams each node as it runs and shows the plan, every dispatch, the SQL results, and the raw
-`GraphState` behind a toggle, with each step marked as an API call or local code. That's how I found
-the loop in section 1.
+SQL each worker ran, and the documents RAG pulled back.
+
+At the time that meant the command line. The supervisor printed its decision and reasoning as it
+went, and I kept the runs that went wrong in a file. That's where the trace in section 1 comes
+from, including the line that ends it:
+
+```
+--- SUPERVISOR AGENT ---
+⚠️ Max iterations reached. Escalating.
+--- HUMAN ESCALATION ---
+```
+
+The developer view came later and does the same job better. It streams each node as it runs and
+shows the plan, every dispatch, the SQL results, and the raw `GraphState` behind a toggle, with each
+step marked as an API call or local code. If I had to debug something like the supervisor loop
+again, that's what I'd use.
