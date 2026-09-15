@@ -1,26 +1,13 @@
-# Insurance Support — a Plan-and-Execute Compound AI System
+# Insurance Support System
 
-A customer-support system for an insurance company. A planner LLM decomposes each request into
-isolated sub-tasks, a dispatcher routes them to specialised workers, and an answer agent
-synthesises the collected evidence into a single reply.
+A customer support system for an insurance company, built with LangGraph. You ask it something
+like "how much is the bill for POL000001 and what's the status of claim CLM000005", and it works
+out which lookups it needs, runs them separately, and writes one answer from the results.
 
-**This began as a multi-agent system and was deliberately rewritten into a constrained workflow.**
-The agent version routed by reading the whole conversation on every turn, which made it
-unpredictable, prone to loops, and exposed to prompt injection — the system made control-flow
-decisions by reading untrusted text. Those are the wrong properties for something framed as a
-product, so the autonomy was engineered out on purpose.
+I built this for a university course and then kept working on it afterwards, because the first
+version had problems I wanted to fix properly.
 
-What remains keeps the LLM in charge of *routing* while making data retrieval **deterministic**:
-lookups are plain parameterised SQL behind regex extraction, not tool-calling guesswork. Answers
-stay grounded and failures stay debuggable. The trade — less autonomy, more predictability — is
-the central design decision, and it is argued in full in
-[docs/design-notes.md](docs/design-notes.md), including an honest answer to whether this still
-counts as a multi-agent system.
-
-![The developer view: live workflow graph, execution trace, and conversation](docs/interface.png)
-
-*Developer view — the workflow graph lights up as the request flows through it, beside a
-step-by-step trace of what each node did.*
+![The developer view: workflow graph, execution trace and conversation](docs/interface.png)
 
 <details>
 <summary>Data-flow diagram</summary>
@@ -29,11 +16,32 @@ step-by-step trace of what each node did.*
 
 </details>
 
----
+## Why it's not a multi-agent system any more
+
+I originally built this the usual way: a supervisor agent that read the whole conversation every
+turn and picked a specialist to handle it. It demoed fine. I replaced it anyway.
+
+Three things were wrong with it. It was unpredictable, because routing depended on whatever
+happened to be in the conversation by then. It looped — once a policy number was mentioned, the
+supervisor kept sending general questions back to the policy worker, and I was patching that with
+more and more rules inside the prompt. And it made control-flow decisions by reading user text,
+which means anything a user typed was competing with my system prompt for control of what the
+system did next.
+
+That last one is what decided it. If this were a real product, being talkable into a different
+execution path is not something you can ship.
+
+So I rewrote it. The planner still decides *what* should happen, but it writes a plan as JSON and
+then a plain Python dispatcher executes it. The workers don't reason at all — they pull an ID out
+of their task string with a regex and run one fixed SQL query. Five of the eight nodes never touch
+a model.
+
+That means it isn't really a multi-agent system now, and I stopped calling it one. It's closer to
+a plan-and-execute workflow. I think losing the autonomy was worth it, and
+[docs/design-notes.md](docs/design-notes.md) explains that in more detail, including the parts
+that still don't work well.
 
 ## How it works
-
-A request flows through a [LangGraph](https://langchain-ai.github.io/langgraph/) state machine:
 
 ```
                         ┌──────────────────┐
@@ -58,170 +66,100 @@ A request flows through a [LangGraph](https://langchain-ai.github.io/langgraph/)
                         └──────────────────┘
 ```
 
-**The planner** reads the conversation and outputs a strict-JSON plan — an array of
-`{agent, task}` steps plus a justification. It does not fetch anything itself.
+The planner reads the conversation and returns a list of `{agent, task}` steps. It doesn't fetch
+anything itself. The dispatcher takes one task off that list at a time and hands it to a single
+worker, then the worker comes back to the dispatcher for the next one. When the list is empty, the
+answer agent writes the reply from whatever the workers collected.
 
-**The dispatcher** pops one task off the plan per iteration and routes it to exactly one worker.
-Workers return to the dispatcher, so a multi-step request ("what's my bill *and* how do I pay it")
-executes as separate, isolated lookups rather than one muddled query.
+The important detail is that a worker only ever sees its own task string. It never sees the
+conversation. That's what fixed the looping — a policy number from three messages ago can't leak
+into an unrelated lookup, because it isn't there to leak.
 
-**Deterministic workers** (`policy`, `billing`, `claims`) extract IDs with regex (`POL\d+`,
-`CLM\d+`) and run parameterised SQL against PostgreSQL. No LLM call, no hallucinated data — if the
-policy isn't in the database, the worker says so.
-
-**The RAG specialist** queries a ChromaDB vector store of 1,002 insurance FAQ entries. The planner
-is prompted to hand it a *pure keyword string* rather than a question, so the node skips a
-query-rewriting LLM call and searches directly — one API call instead of two.
-
-**Task isolation** is the key idea: because each worker sees only its own task string and never the
-full conversation, one agent's context cannot contaminate another's lookup.
-
----
-
-## Tech stack
-
-| Layer | Choice |
-|---|---|
-| Orchestration | LangGraph (`StateGraph`, conditional edges) |
-| LLM | OpenAI `gpt-4o-mini`, `temperature=0` |
-| Structured data | PostgreSQL 17 (Docker, `pgvector/pgvector:pg17`) |
-| Vector store | ChromaDB (persistent, local) |
-| DB driver | Psycopg 3 (binary) |
-| Interface | FastAPI (SSE streaming) + hand-written HTML/CSS/JS |
-
----
+The policy, billing and claims workers are just regex plus one parameterised `SELECT`. If the ID
+isn't in the database they say so rather than inventing something. The RAG specialist searches a
+ChromaDB store of about a thousand insurance FAQ entries; the planner hands it keywords rather than
+a question, so it can search directly instead of rewriting the query with another API call first.
 
 ## Running it
 
-**Prerequisites:** Python 3.10+, Docker, and an OpenAI API key.
+You'll need Python 3.10+, Docker, and an OpenAI API key.
 
 ```bash
-# 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Configure credentials
-cp .env.example .env
-#    then edit .env and add your OPENAI_API_KEY
+cp .env.example .env          # then put your OPENAI_API_KEY in it
 
-# 3. Start PostgreSQL (host port 5433)
-docker compose up -d
+docker compose up -d          # PostgreSQL on port 5433
+python database.py            # creates the schema and seeds synthetic data
+python setup_rag.py           # builds the FAQ vector store, takes a minute
 
-# 4. Create the schema and seed synthetic data
-#    1,000 customers · 1,500 policies · 5,000 billing rows · 300 claims
-python database.py
-
-# 5. Build the FAQ vector store (downloads a dataset, takes a minute)
-python setup_rag.py
-
-# 6. Launch the app
 python api.py
 ```
 
-Then open <http://localhost:8000>.
+Then open <http://localhost:8000>. If the database won't connect, `python test_connection.py`
+checks that on its own.
 
-To verify the database connection on its own: `python test_connection.py`
-
-### Try these
-
-The **Examples** button opens a library of 37 ready-made questions grouped by what they exercise,
-so you can click instead of typing:
-
-| Group | What it exercises |
-|---|---|
-| Single lookup | one worker, one parameterised query |
-| Multi-step plans | several isolated tasks dispatched in sequence |
-| Knowledge base | RAG over the FAQ store, no database involved |
-| Database + knowledge | the hardest planning case — both in one plan |
-| Edge cases | missing, malformed and non-existent identifiers |
-| Escalation | the human-handoff path |
-| **Prompt injection** | 10 attempts to steer the system through user input |
-
-The injection group is worth opening the Developer view for: each entry carries a note on which
-layer is expected to stop it, and the trace shows whether the attempt reached the plan, reached a
-worker, or changed anything. Results are written up in
-[docs/design-notes.md](docs/design-notes.md).
-
-The question library lives in `data/sample_questions.json` and is served at `/api/samples`, so you
-can add your own without touching the frontend.
-
-### Two views
-
-The interface has a **Customer** view — an ordinary chat window — and a **Developer** view that
-shows the same conversation alongside a live execution trace.
-
-At the top is the **workflow graph**: the real topology from `main.py`, drawn as SVG. Nodes light
-up as execution reaches them, the current step pulses, and edges mark the path actually taken — so
-a two-worker plan visibly fans out to `billing` and `claims` while `policy` and `rag` stay dark.
-
-Below it the trace streams in and, for each turn, shows:
-
-- the **flow chain** of every node the request passed through, in order
-- the planner's reasoning and the **JSON plan** it produced, before any of it executes
-- each dispatch: which worker was chosen, and the isolated task string it received
-- the SQL result each worker returned, and the query and documents RAG retrieved
-- per-node timing, and whether the step was an **API call** or **local execution**
-
-Two toggles sit in the panel header: **Graph** hides the diagram when you only want the log (the
-choice is remembered), and **Raw state** expands the complete `GraphState` after every node.
-
-**Every step has an Inspect button** that opens a deep dive in place of the conversation column:
-what the step received, what it did, and what came back. For an LLM step that means the exact
-prompt sent and the raw response; for a worker it means the task string, the regex, the named SQL
-it can issue, the values bound to it, and the rows returned. The answer agent's view shows the
-complete context it was given — which is the whole of what it can see.
-
-**Clicking a node in the graph jumps to what it did.** Since a node can run several times in one
-turn — the dispatcher usually runs three — repeated clicks cycle through each occurrence in
-execution order, showing a `2 / 3` marker and ringing the card it lands on. Only nodes the current
-turn actually visited are clickable, and they are keyboard-reachable. Because the plan is
-produced as data before execution, the trace shows what the system intended to do next to the same
-detail as what it actually did.
-
----
-
-## Data
-
-All data is **synthetic**. `database.py` generates it from a seeded RNG (`random_state=42`) —
-names are random first/last combinations and emails are `user1@example.com` … `user1000@example.com`.
-No real customer information is used anywhere in this project.
-
-The FAQ corpus is sampled from the public
+All the data is fake. `database.py` generates 1,000 customers, 1,500 policies, 5,000 billing rows
+and 300 claims from a seeded RNG, so everyone gets the same data. The names are random
+combinations and the emails are all `@example.com`. The FAQ text comes from the public
 [`deccan-ai/insuranceQA-v2`](https://huggingface.co/datasets/deccan-ai/insuranceQA-v2) dataset.
 
----
+## Things to try
 
-## Project layout
+The **Examples** button has 37 questions grouped by what they exercise, so you don't have to think
+of any: single lookups, multi-step plans, knowledge base questions, edge cases like missing or
+malformed IDs, escalation to a human, and ten prompt injection attempts.
+
+The injection ones are the interesting ones. Each has a note saying which layer should stop it, and
+you can watch in the trace whether the attempt got as far as the plan, as far as a worker, or
+nowhere. One of them does get into the plan — I wrote up what happened in the design notes rather
+than leaving it out.
+
+## The developer view
+
+There's a **Customer** view, which is just a chat window, and a **Developer** view that shows the
+same conversation next to what's actually happening.
+
+The graph at the top is the real topology from `main.py`. Nodes light up as the request reaches
+them and edges show the path it took, so you can see a two-step plan fan out to `billing` and
+`claims` while `policy` and `rag` stay dark. Clicking a node jumps to that step in the log below;
+since the dispatcher usually runs three times in a turn, clicking it repeatedly cycles through
+each run.
+
+Below that is the log: the plan the planner produced, each dispatch and the task it sent, what
+each worker got back, and how long every step took with a marker for whether it cost an API call.
+
+Each step has an **Inspect** button, which is the part I'd actually look at. It shows what that
+step *received*, not just what it returned — the exact prompt for the LLM steps, and for a worker
+the task string, the regex, the SQL statement it ran, the value bound to it and the rows that came
+back. The answer agent's view shows the complete context it was handed, which is a useful way to
+confirm it really can't see anything else.
+
+You can hide the graph with the **Graph** toggle, and **Raw state** shows the full `GraphState`
+after every node if you want everything.
+
+## What's in here
 
 ```
-main.py             LangGraph workflow — 8 nodes, state schema, routing
-prompts.py          System prompts for planner, RAG specialist, answer agent
-agent_tools.py      SQL handlers for policy / billing / claims lookups
-database.py         Schema definition and synthetic data generation
-setup_rag.py        Builds the ChromaDB FAQ vector store
-api.py              FastAPI app: serves the frontend, streams graph events (SSE)
-static/index.html   Markup
-static/style.css    Styles - light and dark, no framework
-static/app.js       Chat, streaming, and the execution trace
-static/graph.js     SVG workflow graph, highlighted live from the event stream
-test_connection.py  Standalone database connectivity check
+main.py             the LangGraph workflow - 8 nodes, state, routing
+prompts.py          prompts for the planner, RAG specialist and answer agent
+agent_tools.py      the SQL lookups
+database.py         schema and synthetic data generation
+setup_rag.py        builds the ChromaDB FAQ store
+api.py              FastAPI - serves the frontend, streams the graph events
+static/             the frontend, no framework
+test_connection.py  database connection check
 docker-compose.yml  PostgreSQL 17 + pgvector
-architecture.png    Data-flow diagram, including the two stores
-data/               Demo FAQs and the example-question library (JSON)
-docs/design-notes.md  Architecture rationale and known limitations
+data/               demo FAQs and the example questions
+docs/design-notes.md  why it's built this way, and what still doesn't work
 ```
 
----
+## Known problems
 
-## Design rationale
+Written up properly in [docs/design-notes.md](docs/design-notes.md), but the short version:
 
-This was first built as a **supervisor-agent** system — one LLM re-reading the conversation each
-turn and freely choosing a specialist. That version was replaced because it was unpredictable, it
-could loop, and it made control-flow decisions by reading raw user text, which is the standard
-prompt-injection setup. For something framed as a customer-facing product, those are the wrong
-properties to ship.
-
-The current design trades autonomy for predictability: the LLM decides *what* should happen, but
-the set of things a worker can actually do is fixed in code and short enough to enumerate.
-
-**[docs/design-notes.md](docs/design-notes.md)** covers that reasoning in full, along with the
-remaining known limitations — including the failure traces that prompted the rewrite.
+The planner sometimes only plans half of a two-part question — ask for a bill *and* how to pay it
+and you'll often get the bill plus "I don't have information about that". ID matching is strict
+regex, so `pol000002` or "policy 1" aren't recognised. There's no authentication, so anyone can
+look up any policy. And I never built a proper eval set, so routing quality is something I checked
+by reading traces rather than measuring.
