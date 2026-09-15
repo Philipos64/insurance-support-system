@@ -5,7 +5,6 @@ import pandas as pd
 from datasets import load_dataset
 import chromadb
 from tqdm import tqdm
-import os
 
 # 1. Setup ChromaDB (Local Vector Store)
 # This creates a folder named 'chroma_db' in your project directory

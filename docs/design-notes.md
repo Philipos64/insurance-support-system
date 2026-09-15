@@ -236,6 +236,11 @@ per-user memory.
 iterations stops runaway execution, but a real system would tell the difference between "stuck in a
 loop" and "this person needs a human".
 
+**Two tables are seeded but never read.** `database.py` fills in `payments` (4,000 rows) and
+`auto_policy_details` (505 rows) because I built the schema before I decided which workers to
+write. No worker queries them. Either they should get a worker or they should come out of the
+schema, and I'd probably add the worker.
+
 **No test set.** Everything runs on `gpt-4o-mini` at `temperature=0`, and I judged routing by
 reading traces rather than scoring anything. A fixed list of queries with the routing I expect would
 turn the notes in this document into a regression test. That's the clearest next thing to build.

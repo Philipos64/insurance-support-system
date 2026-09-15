@@ -52,12 +52,7 @@ TOOL_SQL = {
     "get_billing_info": {"by policy_number": SQL_BILLING_PENDING},
 }
 
-# --- TOOL 1: Ask User ---
-def ask_user(question: str, missing_info: str = ""):
-    """Ask the user for input and return the response."""
-    return {"context": input(f"{question}: "), "source": "User Input"}
-
-# --- TOOL 2: Policy Details (FIXED MAPPING) ---
+# --- TOOL 1: Policy details ---
 def get_policy_details(policy_number: str) -> Dict[str, Any]:
     """Fetch a customer's policy details by policy number"""
     logger.info(f"Fetching policy details for: {policy_number}")
@@ -81,7 +76,7 @@ def get_policy_details(policy_number: str) -> Dict[str, Any]:
             logger.warning(f"Policy not found: {policy_number}")
             return {"error": "Policy not found"}
 
-# --- TOOL 3: Claim Status ---
+# --- TOOL 2: Claim status ---
 def get_claim_status(claim_id: str = None, policy_number: str = None) -> Dict[str, Any]:
     """Get claim status and details"""
     logger.info(f"Fetching claim status")
@@ -109,7 +104,7 @@ def get_claim_status(claim_id: str = None, policy_number: str = None) -> Dict[st
 
             return {"error": "Claim not found"}
 
-# --- TOOL 4: Billing Info ---
+# --- TOOL 3: Billing info ---
 def get_billing_info(policy_number: str = None) -> Dict[str, Any]:
     """Get billing information"""
     logger.info(f"Fetching billing info for: {policy_number}")
@@ -127,41 +122,3 @@ def get_billing_info(policy_number: str = None) -> Dict[str, Any]:
                 }
 
             return {"error": "No pending bills found"}
-
-# --- TOOL 5: Payment History ---
-def get_payment_history(policy_number: str) -> List[Dict[str, Any]]:
-    """Get payment history"""
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                SELECT p.payment_date, p.amount, p.status, p.payment_method
-                FROM payments p
-                JOIN billing b ON p.bill_id = b.bill_id
-                WHERE b.policy_number = %s
-                ORDER BY p.payment_date DESC LIMIT 5
-            """, (policy_number,))
-
-            results = cursor.fetchall()
-            if results:
-                return [{"date": str(r[0]), "amount": float(r[1]), "status": r[2]} for r in results]
-            return []
-
-# --- TOOL 6: Auto Details ---
-def get_auto_policy_details(policy_number: str) -> Dict[str, Any]:
-    """Get vehicle details"""
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                SELECT vehicle_make, vehicle_model, vehicle_year, vehicle_vin
-                FROM auto_policy_details
-                WHERE policy_number = %s
-            """, (policy_number,))
-            result = cursor.fetchone()
-            if result:
-                return {
-                    "make": result[0],
-                    "model": result[1],
-                    "year": result[2],
-                    "vin": result[3]
-                }
-            return {"error": "Vehicle details not found"}

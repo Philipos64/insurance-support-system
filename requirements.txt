@@ -1,6 +1,5 @@
 # Core orchestration
 langgraph==1.0.3
-langchain==1.0.8
 langchain-core==1.0.7
 langchain-openai==1.0.3
 openai==2.8.1

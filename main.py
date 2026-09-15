@@ -8,7 +8,7 @@ import json
 import logging
 import chromadb
 import re
-from typing import TypedDict, List, Dict, Any, Optional
+from typing import TypedDict, Dict, Any, Optional
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -46,7 +46,6 @@ except Exception as e:
 # ==========================================
 class GraphState(TypedDict):
     """Represents the state of the graph during execution."""
-    messages: List[Any]
     user_input: str
     conversation_history: Optional[str]
     n_iteration: Optional[int]
@@ -222,7 +221,6 @@ def policy_worker_node(state: GraphState):
 
     return {
         "conversation_history": history + f"\nPolicy Worker: {final_result_text}",
-        "messages": [SystemMessage(content=final_result_text)],
         "agent_responses": state.get("agent_responses", []) + [final_result_text],
             "detail": {
                 "role": "Deterministic worker. Extracts an ID by regex, then runs one "
@@ -275,7 +273,6 @@ def billing_worker_node(state: GraphState):
 
     return {
         "conversation_history": history + f"\nBilling Worker: {final_result_text}",
-        "messages": [SystemMessage(content=final_result_text)],
         "agent_responses": state.get("agent_responses", []) + [final_result_text],
             "detail": {
                 "role": "Deterministic worker. Extracts an ID by regex, then runs one "
@@ -347,7 +344,6 @@ def claims_worker_node(state: GraphState):
 
     return {
         "conversation_history": history + f"\nClaims Worker: {final_result_text}",
-        "messages": [SystemMessage(content=final_result_text)],
         "agent_responses": state.get("agent_responses", []) + [final_result_text],
         "detail": {
             "role": "Deterministic worker. Extracts an ID by regex, then runs one "
@@ -364,7 +360,6 @@ def claims_worker_node(state: GraphState):
 
 def rag_specialist_node(state: GraphState):
     """RAG-based AI worker node using ChromaDB for general inquiries."""
-    print("[Node] Executing: RAG Specialist (Fast Mode)")
     task = state.get("task", "")
     history = state.get("conversation_history", "")
 
@@ -372,7 +367,7 @@ def rag_specialist_node(state: GraphState):
     # Since the Planner Agent has already perfectly isolated the task,
     # we can use the 'task' string directly as our semantic search query.
     search_query = task
-    print(f"Direct RAG Query: {search_query}")
+    logger.info(f"RAG query: {search_query}")
 
     # 1. Retrieve documents (Directly against ChromaDB)
     results = collection.query(query_texts=[search_query], n_results=4)
