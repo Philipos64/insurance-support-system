@@ -161,7 +161,13 @@ Below it the trace streams in and, for each turn, shows:
 - the SQL result each worker returned, and the query and documents RAG retrieved
 - per-node timing, and whether the step was an **API call** or **local execution**
 
-A **Raw state** toggle expands the complete `GraphState` after every node. Because the plan is
+Two toggles sit in the panel header: **Graph** hides the diagram when you only want the log (the
+choice is remembered), and **Raw state** expands the complete `GraphState` after every node.
+
+**Clicking a node in the graph jumps to what it did.** Since a node can run several times in one
+turn — the dispatcher usually runs three — repeated clicks cycle through each occurrence in
+execution order, showing a `2 / 3` marker and ringing the card it lands on. Only nodes the current
+turn actually visited are clickable, and they are keyboard-reachable. Because the plan is
 produced as data before execution, the trace shows what the system intended to do next to the same
 detail as what it actually did.
 

@@ -52,10 +52,36 @@ const EDGES = [
 
 const key = (a, b) => `${a}>${b}`;
 
+/** A node is only interactive once the current turn has actually run it. */
+function attachActivation(g, id) {
+  const fire = (event) => {
+    if (!g.classList.contains("is-visited")) return;
+    if (!onNodeActivate) return;
+    event.preventDefault();
+    onNodeActivate(id);
+  };
+  g.addEventListener("click", fire);
+  g.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") fire(e);
+  });
+}
+
+/** Keep focusability in step with whether the node is interactive. */
+function setInteractive(g, on) {
+  if (on) {
+    g.setAttribute("tabindex", "0");
+    g.setAttribute("role", "button");
+  } else {
+    g.removeAttribute("tabindex");
+    g.removeAttribute("role");
+  }
+}
+
 let svg = null;
 const nodeEls = new Map();
 const edgeEls = new Map();
 let previous = null;
+let onNodeActivate = null;
 
 function makeDefs() {
   const defs = document.createElementNS(NS, "defs");
@@ -116,6 +142,7 @@ function buildGraph(container) {
     t.textContent = n.label;
     g.append(t);
 
+    attachActivation(g, n.id);
     svg.append(g);
     nodeEls.set(n.id, g);
   }
@@ -133,6 +160,7 @@ function buildGraph(container) {
   et.setAttribute("text-anchor", "middle");
   et.textContent = "END";
   end.append(et);
+  attachActivation(end, "END");
   svg.append(end);
   nodeEls.set("END", end);
 
@@ -153,6 +181,7 @@ function stepGraph(nodeId) {
   }
 
   current.classList.add("is-visited", "is-current");
+  setInteractive(current, true);
   previous = nodeId;
 }
 
@@ -161,15 +190,29 @@ function finishGraph(lastNode) {
   if (lastNode === "answer_agent" || lastNode === "human_handoff") {
     const edge = edgeEls.get(key(lastNode, "END"));
     if (edge) edge.classList.add("is-live");
-    nodeEls.get("END").classList.add("is-visited");
+    const endEl = nodeEls.get("END");
+    endEl.classList.add("is-visited");
+    setInteractive(endEl, true);
   }
 }
 
 /** Clear all highlighting for a new turn. */
 function resetGraph() {
   previous = null;
-  for (const el of nodeEls.values()) el.classList.remove("is-visited", "is-current");
+  for (const el of nodeEls.values()) {
+    el.classList.remove("is-visited", "is-current");
+    setInteractive(el, false);
+  }
   for (const el of new Set(edgeEls.values())) el.classList.remove("is-live");
 }
 
-window.Graph = { build: buildGraph, step: stepGraph, finish: finishGraph, reset: resetGraph };
+/** Register the handler called when a visited node is clicked or keyed. */
+function setNodeHandler(fn) { onNodeActivate = fn; }
+
+window.Graph = {
+  build: buildGraph,
+  step: stepGraph,
+  finish: finishGraph,
+  reset: resetGraph,
+  onNode: setNodeHandler,
+};

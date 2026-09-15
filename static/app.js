@@ -21,6 +21,7 @@ const libBlurb  = $("#library-blurb");
 const libList   = $("#library-list");
 const libToggle = $("#toggle-examples");
 const graphBox  = $("#graph");
+const showGraph = $("#show-graph");
 
 let history = "";
 let turnCount = 0;
@@ -63,8 +64,17 @@ function addMessage(role, text) {
 
 /* ---------------- trace ---------------- */
 
+/* Cards rendered for the turn the graph currently represents, keyed by node.
+   A node can run several times in one turn - the dispatcher usually runs three
+   times - so each key holds every occurrence, in execution order. */
+let turnCards = new Map();
+let cycleIndex = new Map();
+let currentTurnEl = null;
+
 function startTurn(question) {
   Graph.reset();
+  turnCards = new Map();
+  cycleIndex = new Map();
   if (turnCount === 0) trace.innerHTML = "";
   turnCount += 1;
 
@@ -83,6 +93,7 @@ function startTurn(question) {
   head.append(summary);
 
   turn.append(head);
+  currentTurnEl = turn;
   trace.append(turn);
   trace.scrollTop = trace.scrollHeight;
 
@@ -181,7 +192,66 @@ function addNode(turn, payload) {
 
   card.append(nodeBody(payload.node, payload.state || {}));
   turn.append(card);
+
+  if (!turnCards.has(payload.node)) turnCards.set(payload.node, []);
+  turnCards.get(payload.node).push(card);
+
   trace.scrollTop = trace.scrollHeight;
+}
+
+/* ---------------- graph -> log navigation ---------------- */
+
+function flash(card) {
+  // clear every previous target, not just this one, or stale rings accumulate
+  trace.querySelectorAll(".node.is-target").forEach((c) => c.classList.remove("is-target"));
+  void card.offsetWidth;          // restart the animation
+  card.classList.add("is-target");
+}
+
+function scrollTraceTo(card) {
+  // The turn header is sticky, so measure it rather than guessing a gap -
+  // its height varies with how far the flow chain wraps.
+  const head = card.closest(".turn")?.querySelector(".turn-head");
+  const clearance = (head ? head.getBoundingClientRect().height : 0) + 10;
+
+  const cardRect = card.getBoundingClientRect();
+  const traceRect = trace.getBoundingClientRect();
+  trace.scrollTop += cardRect.top - traceRect.top - clearance;
+}
+
+function jumpToNode(nodeId) {
+  let cards = turnCards.get(nodeId);
+
+  // END has no card of its own - send it to the final step of the turn.
+  // Read it from the DOM rather than the registry, whose key order is
+  // first-occurrence order and need not end with the last node to run.
+  if (nodeId === "END" && !cards) {
+    const steps = currentTurnEl ? currentTurnEl.querySelectorAll(".node") : [];
+    cards = steps.length ? [steps[steps.length - 1]] : null;
+  }
+  if (!cards || !cards.length) return;
+
+  const next = (cycleIndex.get(nodeId) ?? -1) + 1;
+  const i = next % cards.length;
+  cycleIndex.set(nodeId, i);
+
+  const card = cards[i];
+  if (!card.isConnected) return;   // trace was cleared underneath us
+
+  scrollTraceTo(card);
+  flash(card);
+
+  if (cards.length > 1) showOccurrence(card, i + 1, cards.length);
+}
+
+/** Transient "2 / 3" marker so cycling through repeats is legible. */
+function showOccurrence(card, n, total) {
+  const head = card.querySelector(".node-head");
+  if (!head) return;
+  head.querySelectorAll(".occurrence").forEach((e) => e.remove());
+  const tag = el("span", "occurrence", `${n} / ${total}`);
+  head.append(tag);
+  setTimeout(() => tag.remove(), 1800);
 }
 
 function finishTurn(summary, data) {
@@ -347,6 +417,10 @@ $("#reset").addEventListener("click", () => {
   if (busy) return;
   history = "";
   turnCount = 0;
+  turnCards = new Map();
+  cycleIndex = new Map();
+  currentTurnEl = null;
+  Graph.reset();
   messages.innerHTML = "";
   trace.innerHTML = "";
   const empty = el("div", "empty");
@@ -366,3 +440,18 @@ greet();
 input.focus();
 
 Graph.build(graphBox);
+Graph.onNode(jumpToNode);
+
+/* graph visibility, remembered between sessions */
+function applyGraphVisibility(visible) {
+  graphBox.hidden = !visible;
+  try { localStorage.setItem("showGraph", visible ? "1" : "0"); } catch {}
+}
+
+showGraph.addEventListener("change", () => applyGraphVisibility(showGraph.checked));
+
+try {
+  const saved = localStorage.getItem("showGraph");
+  if (saved !== null) showGraph.checked = saved === "1";
+} catch {}
+applyGraphVisibility(showGraph.checked);

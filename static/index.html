@@ -58,10 +58,16 @@
   <section class="panel trace-panel">
     <div class="panel-head">
       <h2>Execution trace</h2>
-      <label class="raw-toggle">
-        <input type="checkbox" id="show-raw">
-        <span>Raw state</span>
-      </label>
+      <div class="head-actions">
+        <label class="raw-toggle">
+          <input type="checkbox" id="show-graph" checked>
+          <span>Graph</span>
+        </label>
+        <label class="raw-toggle">
+          <input type="checkbox" id="show-raw">
+          <span>Raw state</span>
+        </label>
+      </div>
     </div>
 
     <div id="graph" class="graph" aria-label="Workflow graph"></div>

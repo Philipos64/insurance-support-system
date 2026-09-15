@@ -469,6 +469,17 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   font-size: 11px;
   fill: var(--text-faint);
   transition: fill .25s;
+  user-select: none;
+}
+
+/* only visited nodes are interactive - they are the ones with a card to reach */
+.gnode.is-visited { cursor: pointer; }
+.gnode.is-visited:hover rect { stroke-width: 2.2; }
+.gnode:focus { outline: none; }
+.gnode:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  paint-order: stroke;
 }
 
 .gnode.is-visited rect {
@@ -673,6 +684,28 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   font-size: 10.5px;
   color: var(--text-faint);
   flex: 0 0 auto;
+}
+
+/* transient marker when cycling through repeated runs of one node */
+.occurrence {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 3px;
+  padding: 1px 5px;
+  flex: 0 0 auto;
+}
+
+/* target of a graph click */
+.node.is-target {
+  animation: target-flash 1.4s ease-out;
+}
+
+@keyframes target-flash {
+  0%   { box-shadow: 0 0 0 2px var(--accent); }
+  70%  { box-shadow: 0 0 0 2px var(--accent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
 }
 
 .node-body { padding: 10px 11px; }
