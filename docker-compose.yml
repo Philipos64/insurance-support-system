@@ -1,0 +1,19 @@
+services:
+  db:
+    container_name: Insurance_DB
+    image: pgvector/pgvector:pg17   # includes Postgres 17 + pgvector
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: ABC   # 👈 set a password
+      POSTGRES_DB: testdb_new_v1       # 👈 new DB name
+    ports:
+      - "5433:5432"                 # 👈 host port 5433
+    volumes:
+      - ./pgdata_test:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+
+# DNS
+# postgresql://root:<your_password>@localhost:5433/testdb_new_v1
+
+# docker compose up -d     (start)
+# docker-compose down -v   (delete)
