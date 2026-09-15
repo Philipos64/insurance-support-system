@@ -20,6 +20,7 @@ const libTabs   = $("#library-tabs");
 const libBlurb  = $("#library-blurb");
 const libList   = $("#library-list");
 const libToggle = $("#toggle-examples");
+const graphBox  = $("#graph");
 
 let history = "";
 let turnCount = 0;
@@ -63,6 +64,7 @@ function addMessage(role, text) {
 /* ---------------- trace ---------------- */
 
 function startTurn(question) {
+  Graph.reset();
   if (turnCount === 0) trace.innerHTML = "";
   turnCount += 1;
 
@@ -243,10 +245,12 @@ async function send(question) {
         const data = JSON.parse(dataLines.join("\n"));
 
         if (event === "node") {
+          Graph.step(data.node);
           addFlowStep(flow, data.node, data.kind);
           addNode(turn, data);
           statusText.textContent = `${humanise(data.node)}…`;
         } else if (event === "done") {
+          Graph.finish(data.path[data.path.length - 1]);
           finishTurn(summary, data);
           history = data.history;
           addMessage("assistant", data.final_answer || "(no answer produced)");
@@ -360,3 +364,5 @@ function greet() {
 
 greet();
 input.focus();
+
+Graph.build(graphBox);

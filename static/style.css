@@ -425,6 +425,79 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   background: color-mix(in srgb, var(--alert) 9%, transparent);
 }
 
+/* ---------------- workflow graph ---------------- */
+
+.graph {
+  flex: 0 0 auto;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.graph-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 34vh;
+}
+
+/* edges: faint by default, accented once traversed */
+.edge {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.2;
+  transition: stroke .25s, stroke-width .25s;
+}
+.edge.is-live {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.arrow-idle { fill: var(--border-strong); }
+.arrow-live { fill: var(--accent); }
+
+/* nodes */
+.gnode rect {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1.2;
+  transition: fill .25s, stroke .25s;
+}
+
+.gnode text {
+  font-family: var(--mono);
+  font-size: 11px;
+  fill: var(--text-faint);
+  transition: fill .25s;
+}
+
+.gnode.is-visited rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.gnode.is-visited text { fill: var(--text); }
+
+/* the step executing right now */
+.gnode.is-current rect {
+  stroke-width: 2;
+  animation: gpulse 1.1s ease-in-out infinite;
+}
+
+@keyframes gpulse {
+  0%, 100% { stroke-opacity: 1; }
+  50%      { stroke-opacity: .35; }
+}
+
+/* LLM nodes carry the plan colour so cost is readable at a glance */
+.gnode[data-kind="llm"].is-visited rect {
+  stroke: var(--plan);
+  fill: color-mix(in srgb, var(--plan) 12%, transparent);
+}
+
+.gnode-end rect { fill: var(--surface-3); stroke: var(--border-strong); }
+.gnode-end text { font-size: 9.5px; letter-spacing: .06em; }
+.gnode-end.is-visited rect { fill: var(--surface-3); stroke: var(--accent); }
+
 /* ---------------- trace ---------------- */
 
 .trace {

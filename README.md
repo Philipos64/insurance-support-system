@@ -17,7 +17,17 @@ the central design decision, and it is argued in full in
 [docs/design-notes.md](docs/design-notes.md), including an honest answer to whether this still
 counts as a multi-agent system.
 
+![The developer view: live workflow graph, execution trace, and conversation](docs/interface.png)
+
+*Developer view — the workflow graph lights up as the request flows through it, beside a
+step-by-step trace of what each node did.*
+
+<details>
+<summary>Data-flow diagram</summary>
+
 ![Architecture](architecture.png)
+
+</details>
 
 ---
 
@@ -137,8 +147,13 @@ can add your own without touching the frontend.
 ### Two views
 
 The interface has a **Customer** view — an ordinary chat window — and a **Developer** view that
-shows the same conversation alongside a live execution trace. The trace streams in as the graph
-runs and, for each turn, shows:
+shows the same conversation alongside a live execution trace.
+
+At the top is the **workflow graph**: the real topology from `main.py`, drawn as SVG. Nodes light
+up as execution reaches them, the current step pulses, and edges mark the path actually taken — so
+a two-worker plan visibly fans out to `billing` and `claims` while `policy` and `rag` stay dark.
+
+Below it the trace streams in and, for each turn, shows:
 
 - the **flow chain** of every node the request passed through, in order
 - the planner's reasoning and the **JSON plan** it produced, before any of it executes
@@ -172,9 +187,13 @@ agent_tools.py      SQL handlers for policy / billing / claims lookups
 database.py         Schema definition and synthetic data generation
 setup_rag.py        Builds the ChromaDB FAQ vector store
 api.py              FastAPI app: serves the frontend, streams graph events (SSE)
-static/             Frontend - index.html, style.css, app.js (no framework)
+static/index.html   Markup
+static/style.css    Styles - light and dark, no framework
+static/app.js       Chat, streaming, and the execution trace
+static/graph.js     SVG workflow graph, highlighted live from the event stream
 test_connection.py  Standalone database connectivity check
 docker-compose.yml  PostgreSQL 17 + pgvector
+architecture.png    Data-flow diagram, including the two stores
 data/               Demo FAQs and the example-question library (JSON)
 docs/design-notes.md  Architecture rationale and known limitations
 ```
