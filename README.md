@@ -104,13 +104,26 @@ To verify the database connection on its own: `python test_connection.py`
 
 ### Try these
 
-| Query | Exercises |
+The **Examples** button opens a library of 37 ready-made questions grouped by what they exercise,
+so you can click instead of typing:
+
+| Group | What it exercises |
 |---|---|
-| `Is policy POL000002 currently active?` | single deterministic lookup |
-| `How much is the bill for POL000001?` | billing worker + SQL |
-| `What is the status of claim CLM000005?` | claims worker |
-| `What does a standard auto policy cover?` | RAG over the FAQ store |
-| `How much is the bill for POL000001 and what payment methods do you accept?` | multi-step plan: billing **+** RAG |
+| Single lookup | one worker, one parameterised query |
+| Multi-step plans | several isolated tasks dispatched in sequence |
+| Knowledge base | RAG over the FAQ store, no database involved |
+| Database + knowledge | the hardest planning case — both in one plan |
+| Edge cases | missing, malformed and non-existent identifiers |
+| Escalation | the human-handoff path |
+| **Prompt injection** | 10 attempts to steer the system through user input |
+
+The injection group is worth opening the Developer view for: each entry carries a note on which
+layer is expected to stop it, and the trace shows whether the attempt reached the plan, reached a
+worker, or changed anything. Results are written up in
+[docs/design-notes.md](docs/design-notes.md).
+
+The question library lives in `data/sample_questions.json` and is served at `/api/samples`, so you
+can add your own without touching the frontend.
 
 ### Two views
 
@@ -153,7 +166,7 @@ api.py              FastAPI app: serves the frontend, streams graph events (SSE)
 static/             Frontend - index.html, style.css, app.js (no framework)
 test_connection.py  Standalone database connectivity check
 docker-compose.yml  PostgreSQL 17 + pgvector
-data/               Hand-written demo FAQs (JSON)
+data/               Demo FAQs and the example-question library (JSON)
 docs/design-notes.md  Architecture rationale and known limitations
 ```
 

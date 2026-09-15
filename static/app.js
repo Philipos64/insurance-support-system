@@ -15,6 +15,11 @@ const sendBtn   = $("#send");
 const status    = $("#status");
 const statusText= $("#status-text");
 const showRaw   = $("#show-raw");
+const library   = $("#library");
+const libTabs   = $("#library-tabs");
+const libBlurb  = $("#library-blurb");
+const libList   = $("#library-list");
+const libToggle = $("#toggle-examples");
 
 let history = "";
 let turnCount = 0;
@@ -196,6 +201,7 @@ async function send(question) {
   if (busy) return;
   busy = true;
   sendBtn.disabled = true;
+  libList.querySelectorAll(".q").forEach((b) => (b.disabled = true));
   input.value = "";
 
   addMessage("user", question);
@@ -255,6 +261,7 @@ async function send(question) {
     status.hidden = true;
     busy = false;
     sendBtn.disabled = false;
+    libList.querySelectorAll(".q").forEach((b) => (b.disabled = false));
     input.focus();
   }
 }
@@ -267,12 +274,57 @@ form.addEventListener("submit", (e) => {
   if (q) send(q);
 });
 
-document.querySelectorAll(".chip").forEach((chip) => {
-  chip.addEventListener("click", () => {
-    if (busy) return;
-    input.value = chip.dataset.q;
-    input.focus();
+/* ---------------- example library ---------------- */
+
+let categories = [];
+
+function renderCategory(cat) {
+  library.dataset.cat = cat.id;
+  libBlurb.textContent = cat.blurb;
+
+  libTabs.querySelectorAll(".tab").forEach((t) =>
+    t.classList.toggle("is-active", t.dataset.id === cat.id));
+
+  libList.innerHTML = "";
+  cat.questions.forEach((q) => {
+    const btn = el("button", "q");
+    btn.type = "button";
+    btn.append(el("span", "q-text", q.text));
+    if (q.note) btn.append(el("span", "q-note", q.note));
+    btn.addEventListener("click", () => {
+      if (busy) return;
+      send(q.text);
+    });
+    libList.append(btn);
   });
+}
+
+async function loadLibrary() {
+  try {
+    categories = await (await fetch("/api/samples")).json();
+  } catch {
+    libBlurb.textContent = "Could not load the example questions.";
+    return;
+  }
+
+  libTabs.innerHTML = "";
+  categories.forEach((cat) => {
+    const tab = el("button", "tab", cat.label);
+    tab.type = "button";
+    tab.dataset.id = cat.id;
+    tab.addEventListener("click", () => renderCategory(cat));
+    libTabs.append(tab);
+  });
+
+  if (categories.length) renderCategory(categories[0]);
+}
+
+libToggle.addEventListener("click", () => {
+  const open = library.hidden;
+  library.hidden = !open;
+  libToggle.setAttribute("aria-expanded", String(open));
+  libToggle.textContent = open ? "Hide examples" : "Examples";
+  if (open && !categories.length) loadLibrary();
 });
 
 document.querySelectorAll(".view-btn").forEach((btn) => {

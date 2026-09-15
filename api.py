@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from main import app as workflow
 
 STATIC_DIR = Path(__file__).parent / "static"
+SAMPLES_PATH = Path(__file__).parent / "data" / "sample_questions.json"
 
 # Nodes that call the OpenAI API, as opposed to running purely local Python.
 # The frontend badges each step with this so the cost of a turn is visible.
@@ -122,6 +123,13 @@ def chat(request: ChatRequest):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@api.get("/api/samples")
+def samples():
+    """Serve the example-question library used by the sidebar."""
+    with open(SAMPLES_PATH, encoding="utf-8") as f:
+        return json.load(f)
 
 
 @api.get("/")

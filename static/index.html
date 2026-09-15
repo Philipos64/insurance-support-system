@@ -30,7 +30,10 @@
   <section class="panel chat-panel">
     <div class="panel-head">
       <h2>Conversation</h2>
-      <button type="button" id="reset" class="ghost-btn">Clear</button>
+      <div class="head-actions">
+        <button type="button" id="toggle-examples" class="ghost-btn" aria-expanded="false">Examples</button>
+        <button type="button" id="reset" class="ghost-btn">Clear</button>
+      </div>
     </div>
 
     <div id="messages" class="messages" aria-live="polite"></div>
@@ -45,12 +48,10 @@
       <button type="submit" id="send">Send</button>
     </form>
 
-    <div class="samples">
-      <span class="samples-label">Try</span>
-      <button type="button" class="chip" data-q="Is policy POL000002 currently active?">single lookup</button>
-      <button type="button" class="chip" data-q="How much is the bill for POL000001 and what is the status of claim CLM000005?">two lookups</button>
-      <button type="button" class="chip" data-q="What is covered under a standard auto insurance policy?">knowledge base</button>
-      <button type="button" class="chip" data-q="Is policy POL000002 active and what does a standard auto policy cover?">database + knowledge</button>
+    <div id="library" class="library" hidden>
+      <div id="library-tabs" class="library-tabs" role="tablist"></div>
+      <p id="library-blurb" class="library-blurb"></p>
+      <div id="library-list" class="library-list"></div>
     </div>
   </section>
 
