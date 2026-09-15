@@ -101,6 +101,10 @@ python api.py
 Then open <http://localhost:8000>. If the database won't connect, `python test_connection.py`
 checks just that.
 
+The Postgres container is bound to `127.0.0.1`, so it's only reachable from your own machine. The
+username and password in `.env.example` aren't secrets, they just have to match `docker-compose.yml`
+so the app can connect to the container it creates.
+
 All the data is fake. `database.py` makes 1,000 customers, 1,500 policies, 5,000 billing rows and
 300 claims from a seeded random generator, so you get the same data I did. The names are random
 combinations and every email is `@example.com`. The FAQ text comes from the public
