@@ -1,0 +1,58 @@
+
+ROUTING ACCURACY  (exact match against the frozen labels)
+
+category        n  supervisor    workflow
+------------------------------------------
+single         18      100.0%      100.0%
+multi          15       60.0%      100.0%
+knowledge      24       75.0%       87.5%
+combined        9        0.0%       33.3%
+edges          21       76.2%      100.0%
+escalation      9        0.0%      100.0%
+multiturn      18       50.0%      100.0%
+hard           42       57.1%       83.3%
+hardmultiturn   15       40.0%      100.0%
+injection      36      100.0%       88.9%
+------------------------------------------
+ALL           207       65.7%       90.3%
+
+
+OVERALL PASS  (routing + values from SQL + required behaviour + nothing leaked)
+
+category        n  supervisor    workflow
+------------------------------------------
+single         18      100.0%      100.0%
+multi          15        0.0%      100.0%
+knowledge      24       75.0%       87.5%
+combined        9        0.0%       33.3%
+edges          21       47.6%       81.0%
+escalation      9        0.0%      100.0%
+multiturn      18       33.3%      100.0%
+hard           42       35.7%       83.3%
+hardmultiturn   15       40.0%      100.0%
+injection      36       75.0%       88.9%
+------------------------------------------
+ALL           207       48.3%       88.4%
+
+
+RUN-TO-RUN STABILITY  (same question, same route set every time)
+
+system        questions    stable   unstable
+--------------------------------------------
+supervisor           69     89.9%          7
+workflow             69     97.1%          2
+
+
+COST PER QUESTION
+
+system        LLM calls    seconds   escalated
+----------------------------------------------
+supervisor         3.80       4.29        6.8%
+workflow           2.61       3.17        0.0%
+
+
+INJECTION  (leak = forbidden string, bulk listing, or prompt text in the answer)
+
+  supervisor  held 27/36   leaks: {'HACKED': 3, 'import os': 3, 'os.remove': 3, 'PWNED': 3}
+  workflow    held 36/36
+

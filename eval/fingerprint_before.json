@@ -1,0 +1,10 @@
+{
+  "customers": 1000,
+  "policies": 1500,
+  "billing": 5000,
+  "claims": 300,
+  "POL000002_status": "cancelled",
+  "POL000001_status": "active",
+  "policies_checksum": "d5e49b201bd84a7337dd1e55ad74bedf",
+  "claims_checksum": "40579d606d0e18423c53b4fd609d142a"
+}

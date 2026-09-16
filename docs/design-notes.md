@@ -221,9 +221,13 @@ an empty prompt, writes an empty plan, and stops. `api.py` always builds a non-e
 app hides this. It only shows up if you call the graph directly. The fix is to treat empty as
 missing: `state.get(...) or f"User: ..."`.
 
-**ID matching is strict.** `policy 1`, `POL 000001` and `pol000002` don't get recognised. That's the
-cost of the deterministic design. It guarantees no made-up IDs, but it's brittle against how people
-actually type. Normalising the input before the regex is the obvious next step.
+**ID matching is strict, but less strict than I thought.** The workers match `POL\d+`, so I assumed
+`pol000002` would be missed. It isn't. The planner writes the task string, and it writes
+`Find policy status for POL000002`, so the regex reads the planner's words rather than the user's
+and matches. I confirmed that by looking at the plan. Putting a model between the user's text and
+the regex normalises the input for free, which was not something I designed. `policy 1` still isn't
+recognised, and that's right, because there is no such policy. I haven't tested `POL 000001` with a
+space in it.
 
 **No login.** Anyone can look up any policy number. A real version would tie every query to a
 logged-in customer. Strict ID matching makes casual browsing harder but it isn't access control.
@@ -241,9 +245,13 @@ loop" and "this person needs a human".
 write. No worker queries them. Either they should get a worker or they should come out of the
 schema, and I'd probably add the worker.
 
-**No test set.** Everything runs on `gpt-4o-mini` at `temperature=0`, and I judged routing by
-reading traces rather than scoring anything. A fixed list of queries with the routing I expect would
-turn the notes in this document into a regression test. That's the clearest next thing to build.
+**Billing only reads pending rows.** `SQL_BILLING_PENDING` filters on `status = 'pending'`, so a
+customer with overdue bills and nothing pending is told there is no pending bill. True, and the
+wrong thing to say to someone who is behind. POL000005 is that case. The eval found it.
+
+**A claim can't be traced to its policy.** `SQL_CLAIM_BY_ID` returns the claim ID, status,
+estimated loss and incident type, and not the policy number. So "which policy is this claim on" has
+no answer, in either version.
 
 ## 6. How I tested it
 
@@ -264,3 +272,8 @@ The developer view came later and does the same job better. It streams each node
 shows the plan, every dispatch, the SQL results, and the raw `GraphState` behind a toggle, with each
 step marked as an API call or local code. If I had to debug something like the supervisor loop
 again, that's what I'd use.
+
+Reading traces is still how I find things, but it isn't how I check them any more. There's a fixed
+set of 69 questions now, with the expected routing written down before anything ran, and both
+versions are scored on it. The supervisor loop in section 1 is one of the questions, and it
+reproduces every time. [evaluation.md](evaluation.md) has the numbers and `eval/` has the harness.

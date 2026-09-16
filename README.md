@@ -43,6 +43,38 @@ plan-and-execute workflow. I think giving up the autonomy was worth it, and
 [docs/design-notes.md](docs/design-notes.md) goes into why, including the parts that still don't
 work well.
 
+I kept the supervisor version running so I could check that, instead of just asserting it. Both
+versions answer the same 69 questions below.
+
+## Does the rewrite actually work better
+
+I ran both versions on the same 69 questions, three times each, against the same database and the
+same model. 414 runs. Routing means the request reached exactly the right workers. Pass means that
+plus the right values out of the database and nothing leaked.
+
+| | Supervisor | This version |
+|---|---|---|
+| Routing correct | 65.7% | **90.3%** |
+| Pass | 47.8% | **89.9%** |
+| Same route every run | 89.9% | **97.1%** |
+| Model calls per question | 3.80 | **2.61** |
+| Seconds per question | 4.29 | **3.17** |
+| Escalated without being asked | 6.8% | **0.0%** |
+| Injection attempts held | 27 of 36 | **36 of 36** |
+
+The supervisor went back to the same worker inside one turn on a quarter of its runs, and hit the
+iteration cap 14 times on questions it should have answered. Asked plainly for a human it got it
+right zero times out of nine. This version never escalated unless it was asked to.
+
+It is also cheaper, which I did not expect. I thought I was trading cost for predictability. The
+supervisor spends model calls re-deciding things it already decided.
+
+Ground truth comes out of PostgreSQL, not a second model judging answers, and the labels were
+written before either version ran. Four questions the supervisor gets right and this one doesn't
+are listed in the write-up, along with two real bugs the eval found that are in both versions.
+[docs/evaluation.md](docs/evaluation.md) has the full tables, and `eval/` has everything needed to
+run it again.
+
 ## How it works
 
 ```
@@ -167,11 +199,21 @@ docs/design-notes.md  why it's built this way, and what still doesn't work
 The full list is in [docs/design-notes.md](docs/design-notes.md). The short version:
 
 The planner sometimes only plans half of a two-part question. Ask for a bill and how to pay it, and
-you'll often get the bill plus "I don't have information about that".
+you'll often get the bill plus "I don't have information about that". That group scores 33.3%, the
+worst on the eval, so it's the thing I'd fix next.
 
-ID matching is strict regex, so `pol000002` and "policy 1" don't get recognised.
+"Tell me about my coverage" goes to the policy worker and asks for a policy number, when it should
+go to the FAQ store. The supervisor version got that one right and this one doesn't.
+
+Billing only looks at pending rows, so someone with overdue bills and nothing pending is told there
+is no pending bill. The eval found that and it's a real bug.
+
+A claim can't be traced back to its policy, because `SQL_CLAIM_BY_ID` doesn't select the policy
+number.
 
 There's no login, so anyone can look up any policy.
 
-And I never built a proper test set. I checked routing quality by reading traces, not by measuring
-it. That's the next thing I'd do.
+ID matching used to be the thing I complained about here. It's better than I thought. The workers
+still match `POL\d+`, but the planner writes the task string, so `pol000002` gets normalised to
+`POL000002` before the regex ever sees it. "policy 1" still isn't recognised, which is correct,
+because there's no such policy.
