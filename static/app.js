@@ -334,7 +334,25 @@ function renderDetail(node, d) {
   if (d.model) out.append(block("Model", d.model, { mono: false }));
   else if ("model" in d) out.append(block("Model", "none - this step runs no model", { mono: false }));
 
-  if (node === "planner_agent") {
+  if (node === "planner_agent" && d.answers) {
+    // The Jev planner. No prompt and no generated text: typed questions in,
+    // probabilities out, and Python turns them into the plan.
+    out.append(block("State sent", d.state_sent,
+      { note: "Program state, not a prompt. IDs are found by regex before the call." }));
+    out.append(block("Questions asked", d.questions,
+      { note: "All answered in one parallel call. Each needs_* is independent, so a two-part question can fire two workers." }));
+    out.append(block("Answers", d.answers,
+      { note: "noul is the probability of yes. Compared against the thresholds below." }));
+    out.append(block("Thresholds", d.thresholds));
+    out.append(block("Rules applied", d.rules_applied,
+      { note: "Python rules that turned the answers into the plan, and why." }));
+    out.append(block("Parsed plan", d.parsed_plan,
+      { note: "This is data, produced before anything executes. Jev never wrote any of these strings." }));
+    if (d.jev_seconds != null) out.append(block("Jev round trip", `${d.jev_seconds} s`, { mono: false }));
+
+  } else if (node === "planner_agent") {
+    if (d.jev_first) out.append(block("Jev asked first", d.jev_first.answers,
+      { note: "Jev was unsure (no intent cleared its threshold), so the GPT planner took the turn." }));
     out.append(block("Prompt sent", d.system_prompt,
       { note: "The full system prompt. The conversation is interpolated into it." }));
     out.append(block("User message", d.user_message));

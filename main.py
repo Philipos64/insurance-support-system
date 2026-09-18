@@ -34,6 +34,14 @@ logger = logging.getLogger("CompoundAISystem")
 # Setup LLM
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
+# Which planner writes the plan. "gpt" is the original: one chat-model call
+# that returns JSON. "jev" asks TypeSafe's Jev a fixed set of typed questions
+# and builds the plan in Python (see jev_planner.py). Everything after the
+# planner is identical either way.
+PLANNER = os.environ.get("PLANNER", "gpt").lower()
+if PLANNER == "jev":
+    import jev_planner
+
 # Setup Vector Store (ChromaDB for RAG)
 try:
     chroma_client = chromadb.PersistentClient(path="./chroma_db")
@@ -63,11 +71,16 @@ class GraphState(TypedDict):
     # Debug / Trace variables
     rag_search_query: Optional[str]
     rag_docs: Optional[str]
+    rag_doc_ids: Optional[list]  # vector-store ids of the retrieved FAQ docs, for the eval
 
     # Per-node inspection record: what the node received and did, as opposed
     # to what it returned. Consumed by the developer view; the graph itself
     # never reads it.
     detail: Optional[Dict[str, Any]]
+
+    # Set only when the Jev planner runs: call count, latency and cost of the
+    # Jev request, which no LangChain callback can see. Read by the eval.
+    jev_trace: Optional[Dict[str, Any]]
 
 # ==========================================
 # WORKFLOW NODES
@@ -104,7 +117,13 @@ def planner_agent_node(state: GraphState):
             "conversation_history": history
         }
 
-    # If no active plan, prompt the LLM to create one
+    if PLANNER == "jev":
+        return _plan_with_jev(state, history, n_iter)
+    return _plan_with_gpt(state, history, n_iter)
+
+
+def _plan_with_gpt(state: GraphState, history: str, n_iter: int):
+    """The original planner: one chat-model call that returns a JSON plan."""
     prompt = PLANNER_PROMPT.format(conversation_history=history)
     messages = [
         SystemMessage(content=prompt),
@@ -142,6 +161,68 @@ def planner_agent_node(state: GraphState):
     except Exception as e:
         logger.error(f"Planner parsing error: {e}")
         return {"next_agent": "answer_agent", "n_iteration": n_iter}
+
+def _plan_with_jev(state: GraphState, history: str, n_iter: int):
+    """Ask Jev typed questions about the turn and build the plan in Python.
+
+    Mirrors `_plan_with_gpt`'s return contract exactly. If Jev is unsure
+    (no intent clears its threshold but one is close) and PLANNER_FALLBACK
+    is "gpt", the turn is handed to the GPT planner and both are recorded.
+    """
+    try:
+        result = jev_planner.plan_turn(state["user_input"], history)
+    except Exception as e:
+        logger.error(f"Jev planner error: {e}")
+        return {"next_agent": "answer_agent", "n_iteration": n_iter,
+                "jev_trace": {"calls": 1, "seconds": 0.0, "cost": 0.0, "error": str(e)}}
+
+    trace = {"calls": 1, "seconds": result["seconds"], "cost": result["cost"],
+             "model": result["model"],
+             "fallback": False, "unsure": result["flags"].get("unsure", False),
+             "injection_flagged": result["flags"].get("injection_flagged", False)}
+    detail = {
+        "role": "Routes the request. Asks Jev typed yes/no questions and builds "
+                "the plan in Python; Jev never writes a string that reaches a worker.",
+        "model": result["model"],
+        "state_sent": result["state_sent"],
+        "questions": jev_planner.QUESTIONS,
+        "answers": result["answers"],
+        "thresholds": jev_planner.THRESHOLDS,
+        "ids_found": result["ids"],
+        "rules_applied": result["flags"],
+        "parsed_plan": result["plan"],
+        "jev_seconds": result["seconds"],
+        "jev_usage": result["usage"],
+    }
+
+    plan = result["plan"]
+    if not plan and result["flags"].get("unsure") and jev_planner.fallback_mode() == "gpt":
+        logger.info("Jev unsure, falling back to the GPT planner")
+        gpt = _plan_with_gpt(state, history, n_iter)
+        trace["fallback"] = True
+        gpt["jev_trace"] = trace
+        gpt_detail = gpt.get("detail") or {}
+        gpt_detail["jev_first"] = detail
+        gpt_detail["role"] = ("Jev was unsure, so the GPT planner wrote the plan. "
+                              "Jev's answers are under jev_first.")
+        gpt["detail"] = gpt_detail
+        return gpt
+
+    if not plan:
+        return {"next_agent": "end", "n_iteration": n_iter, "conversation_history": history,
+                "plan": [], "justification": result["justification"],
+                "jev_trace": trace, "detail": detail}
+
+    return {
+        "next_agent": [step["agent"] for step in plan],
+        "plan": plan,
+        "justification": result["justification"],
+        "n_iteration": n_iter,
+        "conversation_history": history,
+        "jev_trace": trace,
+        "detail": detail,
+    }
+
 
 def workflow_dispatcher_node(state: GraphState):
     """
@@ -386,6 +467,7 @@ def rag_specialist_node(state: GraphState):
         "agent_responses": state.get("agent_responses", []) + [response.content],
         "rag_search_query": search_query,
         "rag_docs": context,
+        "rag_doc_ids": results["ids"][0] if results.get("ids") else [],
         "detail": {
             "role": "Vector search over the FAQ store, then one model call to summarise. "
                     "The planner already shaped the task into a keyword query, so no "
