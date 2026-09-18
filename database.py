@@ -11,13 +11,23 @@ load_dotenv()
 
 # 2. Setup Connection
 def get_db_connection():
-    """Connects to PostgreSQL using Psycopg 3"""
+    """Connects to PostgreSQL using Psycopg 3.
+
+    Keepalives and a connect timeout are set so a connection the server has
+    dropped fails within about a minute instead of hanging forever. A long
+    eval run hit exactly that: one query sat on a dead socket for 17 minutes.
+    """
     return psycopg.connect(
         host=os.getenv("DB_HOST"),
         dbname=os.getenv("DB_NAME"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
-        port=os.getenv("DB_PORT")
+        port=os.getenv("DB_PORT"),
+        connect_timeout=10,
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=3,
     )
 
 # 3. YOUR Data Generation Code (Exact copy from notebook)
