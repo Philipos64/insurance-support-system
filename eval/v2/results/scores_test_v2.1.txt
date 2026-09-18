@@ -1,0 +1,91 @@
+
+V2 EVAL, split=test: 220 questions, workflow 660 runs, jev planner 660 runs
+  workflow     answer model gpt-4o-mini, planner gpt
+  jev planner  answer model gpt-4o-mini, planner typesafe/jev-1.13-20260917
+
+ROUTING ACCURACY  (exact match)
+
+slice                   n    workflow  jev planner
+--------------------------------------------------
+single_lookup         309      100.0%       96.1%
+not_found              66       59.1%      100.0%
+multi_lookup           60      100.0%      100.0%
+lookup_plus_faq        30       60.0%       96.7%
+knowledge              66       87.9%      100.0%
+vague_or_odd_id        27      100.0%       88.9%
+multiturn              30      100.0%       90.0%
+escalation             21      100.0%      100.0%
+non_task               24      100.0%       87.5%
+injection              18      100.0%      100.0%
+known_gap               9      100.0%      100.0%
+--------------------------------------------------
+ALL (excl. known_gap)  651       92.8%       96.6%
+  95% CI                   [90.5,  94.5]  [94.9,  97.8]
+
+OVERALL PASS  (routes + SQL facts + behaviour + nothing leaked)
+
+slice                   n    workflow  jev planner
+--------------------------------------------------
+single_lookup         309      100.0%       96.1%
+not_found              66       59.1%      100.0%
+multi_lookup           60      100.0%      100.0%
+lookup_plus_faq        30       60.0%       96.7%
+knowledge              66       87.9%      100.0%
+vague_or_odd_id        27       96.3%       81.5%
+multiturn              30      100.0%       90.0%
+escalation             21      100.0%      100.0%
+non_task               24      100.0%       87.5%
+injection              18      100.0%      100.0%
+known_gap               9      100.0%      100.0%
+--------------------------------------------------
+ALL (excl. known_gap)  651       92.6%       96.3%
+  95% CI                   [90.4,  94.4]  [94.6,  97.5]
+
+
+TEMPLATE vs PARAPHRASE  (pass rate; a gap here means wording sensitivity)
+
+source / style          n    workflow  jev planner
+--------------------------------------------------
+template              408       93.1%       97.8%
+paraphrase            243       91.8%       93.8%
+  casual               45       86.7%      100.0%
+  formal               48       95.8%      100.0%
+  indirect             51       88.2%       88.2%
+  swedish              30      100.0%       70.0%
+  terse                39       92.3%      100.0%
+  typos                30       90.0%      100.0%
+
+
+RETRIEVAL  (expected FAQ document in the top 4, on questions that have one)
+
+  workflow     hit@4  71.6% of 102 runs  [62.2,  79.4]
+  jev planner  hit@4  90.2% of 102 runs  [82.9,  94.6]
+
+
+PAIRED COMPARISON  (same question and run; McNemar exact test on discordant pairs)
+
+  workflow vs jev planner: 651 pairs, workflow alone right 22, jev planner alone right 46, p = 0.0049
+
+
+COST PER QUESTION
+
+system        LLM calls    seconds   escalated
+workflow           2.19       2.72        0.0%
+jev planner        1.18       1.97        0.0%
+
+  jev planner: latency mean 0.54s median 0.50s, cost $0.0252 over 660 runs
+
+
+INJECTION
+
+  workflow     held 18/18
+  jev planner  held 18/18
+
+
+KNOWN GAP  (overdue-only policies; scored as 'not found' to measure routing, real answer is the overdue amount)
+
+  workflow     routed to billing 100.0%, said nothing due 100.0%
+  jev planner  routed to billing 100.0%, said nothing due 100.0%
+
+(test split: per-question failures deliberately not listed)
+

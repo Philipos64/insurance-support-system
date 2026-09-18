@@ -1,0 +1,1331 @@
+{
+ "version": "2.0-paraphrases",
+ "model": "anthropic/claude-sonnet-5",
+ "seed": 20260918,
+ "items": [
+  {
+   "base_id": "billing_due-04",
+   "style": "swedish",
+   "turns": [
+    "Hur mycket är jag skyldig på POL000051?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-04",
+   "style": "terse",
+   "turns": [
+    "Balance owed on POL000051?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-06",
+   "style": "terse",
+   "turns": [
+    "Amount owed on POL000175?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-06",
+   "style": "typos",
+   "turns": [
+    "how much i owe on POL000175? need it quikc"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-09",
+   "style": "indirect",
+   "turns": [
+    "I've been reviewing my account and want to make sure I'm up to date with everything before the next billing cycle. With that in mind, could you tell me how much I owe on POL000173?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-09",
+   "style": "typos",
+   "turns": [
+    "how much do i owe on POL000173? need it kinda fats"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-10",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the amount I currently owe on policy POL000092."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-10",
+   "style": "terse",
+   "turns": [
+    "Amount owed on POL000092?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-11",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the outstanding amount owed on policy POL001249."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-11",
+   "style": "swedish",
+   "turns": [
+    "Hur mycket är jag skyldig på POL001249?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-15",
+   "style": "casual",
+   "turns": [
+    "hey quick q, how much do i still owe on POL001353?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-15",
+   "style": "terse",
+   "turns": [
+    "Amount owed on POL001353?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-16",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the amount currently owed on policy POL000732."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-16",
+   "style": "typos",
+   "turns": [
+    "how much i owe on POL000732? in a rsuh"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-19",
+   "style": "casual",
+   "turns": [
+    "hey quick q, how much do i owe on POL000938?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-19",
+   "style": "typos",
+   "turns": [
+    "how much i owe on POL000938? need it quikc"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-20",
+   "style": "casual",
+   "turns": [
+    "hey quick q, how much do i still owe on POL001357?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-20",
+   "style": "indirect",
+   "turns": [
+    "I'm trying to get a clear picture of my account before I make any decisions, so I need some information first. Could you tell me how much I owe on POL001357?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-23",
+   "style": "casual",
+   "turns": [
+    "hey quick q - how much do i still owe on POL001370?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_due-23",
+   "style": "swedish",
+   "turns": [
+    "Hur mycket är jag skyldig på POL001370?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-01",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me whether there is any amount due on policy POL001350."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-01",
+   "style": "indirect",
+   "turns": [
+    "I've been going through some of my records lately and wanted to check on the status of one of my policies. Specifically, is there anything due on POL001350?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-03",
+   "style": "casual",
+   "turns": [
+    "hey quick q, is there anything due on POL000059?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-03",
+   "style": "terse",
+   "turns": [
+    "Anything due on POL000059?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-05",
+   "style": "indirect",
+   "turns": [
+    "I've been going through my policy documents recently and wanted to check on something. Regarding POL000699, is there anything due on it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-05",
+   "style": "typos",
+   "turns": [
+    "is der anythng due on POL000699?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-06",
+   "style": "terse",
+   "turns": [
+    "Anything due on POL001490?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-06",
+   "style": "typos",
+   "turns": [
+    "is anythng due on POL001490? need to know quick"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-08",
+   "style": "casual",
+   "turns": [
+    "hey quick q, is there anything due on POL000838?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "billing_none-08",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me whether there is any amount due on policy POL000838."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "chitchat-02",
+   "style": "indirect",
+   "turns": [
+    "Okay, I think that covers everything I needed to check on for now, so thanks, that's all."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "chitchat-02",
+   "style": "typos",
+   "turns": [
+    "thnaks, thats al."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "chitchat-04",
+   "style": "casual",
+   "turns": [
+    "awesome, thanks a ton for the help!"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "chitchat-04",
+   "style": "terse",
+   "turns": [
+    "Thanks, appreciated."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_amount-03",
+   "style": "indirect",
+   "turns": [
+    "I've been trying to keep track of my claims lately, and there's one in particular I need details on. I'm referring to claim CLM000290 - could you tell me how much it's for?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_amount-03",
+   "style": "swedish",
+   "turns": [
+    "Hur mycket gäller ärende CLM000290?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_amount-04",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the amount for claim CLM000092."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_amount-04",
+   "style": "indirect",
+   "turns": [
+    "I've been trying to keep track of my claim details lately, and there's one in particular I want to check on. So, regarding claim CLM000092, how much is it for?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_amount-07",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the amount for claim CLM000183."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_amount-07",
+   "style": "swedish",
+   "turns": [
+    "Hur mycket gäller anspråk CLM000183?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_amount-08",
+   "style": "casual",
+   "turns": [
+    "hey quick q, how much is claim CLM000188 for?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_amount-08",
+   "style": "terse",
+   "turns": [
+    "Amount for CLM000188?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-03",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the current status of claim CLM000005."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-03",
+   "style": "terse",
+   "turns": [
+    "Status of claim CLM000005?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-07",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the current status of claim CLM000272."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-07",
+   "style": "indirect",
+   "turns": [
+    "I filed a claim a while back and I've just been waiting to hear something, so I wanted to check in on it - could you tell me what the status of claim CLM000272 is?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-08",
+   "style": "terse",
+   "turns": [
+    "Status of CLM000167?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-08",
+   "style": "typos",
+   "turns": [
+    "wat is teh staus of clam CLM000167?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-11",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the current status of claim CLM000224."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-11",
+   "style": "terse",
+   "turns": [
+    "Status of claim CLM000224?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-13",
+   "style": "casual",
+   "turns": [
+    "hey quick q - any idea what's up with claim CLM000193? what's the status on it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_status-13",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the current status of claim CLM000193."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_type-03",
+   "style": "casual",
+   "turns": [
+    "hey quick q, what kind of incident is claim CLM000153 about?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_type-03",
+   "style": "terse",
+   "turns": [
+    "Incident type for claim CLM000153?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_type-04",
+   "style": "terse",
+   "turns": [
+    "Incident type for CLM000251?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_type-04",
+   "style": "typos",
+   "turns": [
+    "wat kind of incdent is calim CLM000251 abt?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_unknown-02",
+   "style": "indirect",
+   "turns": [
+    "I've been keeping an eye on a claim I filed a while back and haven't heard much since, so I wanted to check in about it. Could you tell me what the status of claim CLM000698 is?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_unknown-02",
+   "style": "swedish",
+   "turns": [
+    "Vad är status på skadeanmälan CLM000698?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_unknown-03",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the current status of claim CLM001136."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claim_unknown-03",
+   "style": "swedish",
+   "turns": [
+    "Vad är status på ärende CLM001136?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claims_by_policy-09",
+   "style": "indirect",
+   "turns": [
+    "I've been looking into my coverage history and wanted to check something specific. Before I go any further, can you tell me what claims are there on policy POL001299?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claims_by_policy-09",
+   "style": "terse",
+   "turns": [
+    "Claims on POL001299?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claims_by_policy-10",
+   "style": "casual",
+   "turns": [
+    "hey quick q, what claims are on policy POL000311?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "claims_by_policy-10",
+   "style": "swedish",
+   "turns": [
+    "Vilka skadeanmälningar finns det på försäkring POL000311?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_billing_howpay-01",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the amount due for the bill associated with policy POL000763, as well as the method by which I may make payment."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_billing_howpay-01",
+   "style": "terse",
+   "turns": [
+    "Bill amount for POL000763 and how to pay it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_billing_howpay-03",
+   "style": "casual",
+   "turns": [
+    "hey quick q - how much do i owe on POL000475 and how do i actually pay that?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_billing_howpay-03",
+   "style": "swedish",
+   "turns": [
+    "Hur mycket är fakturan för POL000475och hur betalar jag den?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_billing_howpay-05",
+   "style": "casual",
+   "turns": [
+    "hey quick q, how much do i owe on POL000730 and what's the easiest way to pay it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_billing_howpay-05",
+   "style": "terse",
+   "turns": [
+    "Bill amount for POL000730 and how to pay it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_claim_appeal-01",
+   "style": "formal",
+   "turns": [
+    "I am writing to inform you that my claim CLM000271 was denied, and I would like to kindly ask whether I may appeal this decision."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_claim_appeal-01",
+   "style": "typos",
+   "turns": [
+    "my calim CLM000271 got denied, can i appael it??"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_policy_coverage-02",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me whether policy POL000494 is currently active, and also advise me as to what a standard auto policy typically covers."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_policy_coverage-02",
+   "style": "indirect",
+   "turns": [
+    "I've been meaning to check on something related to my auto coverage. Before anything else, I'd like to know if POL000494 is currently active, and also, what does a standard auto policy typically cover?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_policy_coverage-04",
+   "style": "casual",
+   "turns": [
+    "hey quick q, is POL000449 active rn? also what's usually covered under a standard auto policy?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_policy_coverage-04",
+   "style": "indirect",
+   "turns": [
+    "I've been looking into my auto coverage lately and wanted to get some clarity on a few things. Before anything else, could you tell me whether POL000449 is currently active, and also, what does a standard auto policy typically cover?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_policy_coverage-05",
+   "style": "swedish",
+   "turns": [
+    "Är POL000037 aktiv, och vad täcker en vanlig bilförsäkring?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "combined_policy_coverage-05",
+   "style": "typos",
+   "turns": [
+    "is POL000037 active and wat does a stadnard auto policy cvoer?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "escalation-01",
+   "style": "casual",
+   "turns": [
+    "hey can i just talk to an actual human, not a bot"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "escalation-01",
+   "style": "indirect",
+   "turns": [
+    "I've been trying to sort out something on my end, but I think this really needs a personal touch. Could I speak to a human representative?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "escalation-02",
+   "style": "indirect",
+   "turns": [
+    "I've been trying to sort this out for a while now and this automated help isn't getting me anywhere. At this point I need to talk to a real person."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "escalation-02",
+   "style": "terse",
+   "turns": [
+    "Need a real person, not this."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "escalation-05",
+   "style": "indirect",
+   "turns": [
+    "I've been trying to sort this out for a bit now and I think it's gotten to the point where I need something more than automated help. Could you transfer me to a human, please?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "escalation-05",
+   "style": "swedish",
+   "turns": [
+    "Kan du koppla mig till en människa, tack."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "escalation-06",
+   "style": "swedish",
+   "turns": [
+    "Jag behöver få prata med en person."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "escalation-06",
+   "style": "typos",
+   "turns": [
+    "i ned a persno on the lien, now"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "knowledge_company-01",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly advise me on how to pay my insurance bill."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "knowledge_company-01",
+   "style": "indirect",
+   "turns": [
+    "I've been meaning to get this sorted out, and I keep forgetting to check on it, but I need to take care of my insurance payment soon. So, how do I pay my insurance bill?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "knowledge_company-02",
+   "style": "casual",
+   "turns": [
+    "hey quick q, what payment methods do you guys take?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "knowledge_company-02",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me which payment methods you accept."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "knowledge_company-03",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me whether it is possible for me to make my payment by bank transfer."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "knowledge_company-03",
+   "style": "terse",
+   "turns": [
+    "Bank transfer possible?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "knowledge_company-06",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me whether vandalism is covered under a car policy."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "knowledge_company-06",
+   "style": "indirect",
+   "turns": [
+    "I've been thinking about different scenarios that could damage my car, and vandalism came to mind as something that might happen. So, before anything occurs, I wanted to check: is vandalism covered on a car policy?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_claim_billing-03",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the current status of claim CLM000298, as well as the bill amount for policy POL001301."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_claim_billing-03",
+   "style": "indirect",
+   "turns": [
+    "I've been keeping an eye on a claim I filed a while back, and I'm also trying to sort out some billing details on a separate policy. With that in mind, could you tell me what the status of claim CLM000298 is, and what the bill for POL001301 is?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_claim_billing-06",
+   "style": "indirect",
+   "turns": [
+    "I've been keeping track of a couple of things related to my insurance, and I wanted to check in on them. There's a claim I filed a while back, and I'm also trying to sort out billing on one of my policies. With that in mind, could you tell me the status of claim CLM000190, and also what the bill is for POL000316?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_claim_billing-06",
+   "style": "typos",
+   "turns": [
+    "hey wat's the staus of clam CLM000190, and whats teh bill for POL000316?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_policy_billing-04",
+   "style": "casual",
+   "turns": [
+    "hey quick q - is POL000651 still active? and how much do i owe on it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_policy_billing-04",
+   "style": "indirect",
+   "turns": [
+    "I've been meaning to check in on one of my policies for a bit now. There's some history with it I won't get into, but I need to know two things about POL000651: is it currently active, and how much do I owe on it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_policy_billing-06",
+   "style": "casual",
+   "turns": [
+    "hey quick q, is POL001038 still active? and how much do i owe on it lol"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_policy_billing-06",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me whether policy POL001038 is currently active, and advise me of the outstanding amount owed on it."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_policy_billing-07",
+   "style": "indirect",
+   "turns": [
+    "I've been meaning to check on one of my policies for a bit now, POL000617 - could you tell me if it's currently active, and also let me know how much I owe on it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_policy_billing-07",
+   "style": "terse",
+   "turns": [
+    "POL000617 active? Amount owed?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_three-01",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me whether policy POL000543 is currently active, advise me of the amount I owe on it, and let me know whether there are any claims against it."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_three-01",
+   "style": "terse",
+   "turns": [
+    "POL000543 active? Amount owed? Any claims against it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_three-02",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me whether policy POL000263 is currently active, advise me of the amount I owe on it, and let me know if there are any claims filed against it."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_three-02",
+   "style": "typos",
+   "turns": [
+    "is POL000263 acitve, how much do i owe on it, and r there any calims aginst it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_three-04",
+   "style": "indirect",
+   "turns": [
+    "I've been meaning to check in on one of my policies for a bit now, and I figured I'd just ask directly - regarding POL000947, could you tell me whether it's currently active, what balance I might owe on it, and whether there are any claims against it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_three-04",
+   "style": "terse",
+   "turns": [
+    "POL000947 active? Amount owed? Any claims against it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_two_policies-01",
+   "style": "indirect",
+   "turns": [
+    "I've got a couple of policies on my mind, POL001475 and POL000571, and I need to sort out where things stand with them. So, between those two, which one is still active?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multi_two_policies-01",
+   "style": "swedish",
+   "turns": [
+    "Vilken av POL001475 och POL000571 är fortfarande aktiv?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multiturn_followup_billing-02",
+   "style": "terse",
+   "turns": [
+    "POL001039 active?",
+    "Amount owed on it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multiturn_followup_billing-02",
+   "style": "typos",
+   "turns": [
+    "is POL001039 activ??? need to know quikc",
+    "how much i owe on it"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multiturn_followup_claims-03",
+   "style": "terse",
+   "turns": [
+    "POL000023 active?",
+    "Claims on it?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "multiturn_switch_to_faq-06",
+   "style": "swedish",
+   "turns": [
+    "Hur mycket är jag skyldig på POL000708?",
+    "Vad täcker helförsäkringen?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "no_id_lookup-01",
+   "style": "terse",
+   "turns": [
+    "Amount owed?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "no_id_lookup-01",
+   "style": "typos",
+   "turns": [
+    "how much do i oew??"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "no_id_lookup-03",
+   "style": "casual",
+   "turns": [
+    "hey quick q, what's the status of my claim lol"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "no_id_lookup-03",
+   "style": "swedish",
+   "turns": [
+    "Vad är status på mitt ärende?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "no_id_lookup-08",
+   "style": "indirect",
+   "turns": [
+    "I've been trying to keep track of my account lately and I'm not entirely sure where things stand. Before I go any further, could you tell me if I have any bills outstanding?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "no_id_lookup-08",
+   "style": "terse",
+   "turns": [
+    "Any bills outstanding?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "offtopic-01",
+   "style": "casual",
+   "turns": [
+    "hey random q but do u know what the weather's like in stockholm today?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "offtopic-01",
+   "style": "typos",
+   "turns": [
+    "wat is teh weahter in Stockholm today?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "offtopic-05",
+   "style": "swedish",
+   "turns": [
+    "Vad är huvudstaden i Australien?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "offtopic-05",
+   "style": "typos",
+   "turns": [
+    "whats teh captial of Austrailia?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-02",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me who the owner of policy POL000570 is."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-02",
+   "style": "indirect",
+   "turns": [
+    "I'm trying to sort out some details on a policy I have questions about, and before anything else I need to confirm something basic about it. So, who is the owner of POL000570?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-05",
+   "style": "indirect",
+   "turns": [
+    "I need to sort out some paperwork related to a policy I'm looking into, but before I go further I want to confirm something basic about it. So, regarding POL001368, who is the owner of that policy?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-05",
+   "style": "typos",
+   "turns": [
+    "who si teh onwer of POL001368? need it quikc"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-06",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me who the owner of policy POL001119 is."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-07",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me who the owner of policy POL001013 is."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-07",
+   "style": "indirect",
+   "turns": [
+    "I've been looking into a policy for some reason and I need to sort out some details about it. Before I can move forward, I need to know: who is the owner of POL001013?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-08",
+   "style": "terse",
+   "turns": [
+    "Owner of POL001038?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-08",
+   "style": "typos",
+   "turns": [
+    "hey who owns POL001038, need tht info fast plz"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-10",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me who the owner of policy POL000321 is."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-10",
+   "style": "swedish",
+   "turns": [
+    "Vem är ägare till POL000321?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_owner-12",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me who the owner of policy POL000265 is."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-05",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly confirm whether policy POL000956 is currently active."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-05",
+   "style": "swedish",
+   "turns": [
+    "Är försäkringen POL000956 aktiv?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-08",
+   "style": "indirect",
+   "turns": [
+    "I need to check on something for one of my policies. Before anything else, could you tell me if policy POL000970 is currently active?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-08",
+   "style": "swedish",
+   "turns": [
+    "Är policy POL000970 aktiv?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-10",
+   "style": "swedish",
+   "turns": [
+    "Är försäkringen POL000999 aktiv?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-10",
+   "style": "terse",
+   "turns": [
+    "POL000999 active?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-12",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly confirm whether policy POL000263 is currently active."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-12",
+   "style": "swedish",
+   "turns": [
+    "Är försäkringen POL000263 aktiv?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-13",
+   "style": "casual",
+   "turns": [
+    "hey quick q - is policy POL000470 active rn?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-13",
+   "style": "terse",
+   "turns": [
+    "Policy POL000470 active?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-15",
+   "style": "casual",
+   "turns": [
+    "hey quick q, is policy POL000107 active rn?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-15",
+   "style": "terse",
+   "turns": [
+    "Status of POL000107?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-16",
+   "style": "casual",
+   "turns": [
+    "hey quick q - is policy POL000697 active rn?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-16",
+   "style": "terse",
+   "turns": [
+    "POL000697 active?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-17",
+   "style": "indirect",
+   "turns": [
+    "I need to check on something regarding one of my policies. Before anything else, could you tell me if policy POL000403 is currently active?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_status-17",
+   "style": "terse",
+   "turns": [
+    "POL000403 active?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_type-04",
+   "style": "casual",
+   "turns": [
+    "hey quick q, what type of policy is POL000326?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_type-04",
+   "style": "typos",
+   "turns": [
+    "wat typ of policy is POL000326??"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_type-05",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the type of policy associated with POL000236."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_type-07",
+   "style": "swedish",
+   "turns": [
+    "Vilken typ av försäkring är POL000537?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_type-07",
+   "style": "terse",
+   "turns": [
+    "Policy type for POL000537?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_unknown-01",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the current status of policy POL009472."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_unknown-01",
+   "style": "terse",
+   "turns": [
+    "Status of POL009472?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_unknown-03",
+   "style": "formal",
+   "turns": [
+    "I would be grateful if you could kindly inform me of the current status of policy POL006191."
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_unknown-03",
+   "style": "swedish",
+   "turns": [
+    "Vad är status på policy POL006191?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_unknown-06",
+   "style": "casual",
+   "turns": [
+    "hey quick q, do u know what's up with policy POL003347? like whats the status on it"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  },
+  {
+   "base_id": "policy_unknown-06",
+   "style": "typos",
+   "turns": [
+    "wat is the staus of polcy POL003347?"
+   ],
+   "model": "anthropic/claude-sonnet-5"
+  }
+ ]
+}
