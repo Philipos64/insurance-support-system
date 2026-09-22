@@ -47,6 +47,9 @@ ROUTE_MAP = {
         "human_handoff": "human",
     },
 }
+# The jev system is the current graph with the planner swapped for Jev. Same
+# node names, same route vocabulary.
+ROUTE_MAP["jev"] = ROUTE_MAP["new"]
 
 ANSWER_KEYS = ("final_answer",)
 
@@ -90,7 +93,7 @@ def run_one_turn(app, message, history, system):
         "conversation_history": conversation,
         "n_iteration": 0,
     }
-    if system == "new":
+    if system in ("new", "jev"):
         inputs["agent_responses"] = []
         inputs["plan"] = []
 
@@ -114,14 +117,30 @@ def run_one_turn(app, message, history, system):
             break
 
     routes = [ROUTE_MAP[system][n] for n in node_order if n in ROUTE_MAP[system]]
-    return {
+    record = {
         "answer": answer or "",
         "node_order": node_order,
         "routes": routes,
         "llm_calls": counter.calls,
         "seconds": round(elapsed, 3),
         "history_out": final_state.get("conversation_history", conversation),
+        # Ids of the FAQ documents the RAG node retrieved, if it ran. The v2
+        # eval scores retrieval against these; nothing else reads them.
+        "rag_doc_ids": final_state.get("rag_doc_ids", []),
     }
+    # The Jev planner is an HTTP call, not a LangChain model, so LLMCounter
+    # never sees it. The node leaves a record in state; copy it out here so
+    # planner cost and latency are comparable across systems.
+    jev = final_state.get("jev_trace")
+    if jev:
+        record["jev_calls"] = jev.get("calls", 0)
+        record["jev_seconds"] = jev.get("seconds", 0.0)
+        record["jev_cost"] = jev.get("cost", 0.0)
+        record["jev_fallback"] = jev.get("fallback", False)
+        record["jev_unsure"] = jev.get("unsure", False)
+        record["jev_injection_flagged"] = jev.get("injection_flagged", False)
+        record["jev_model"] = jev.get("model")
+    return record
 
 
 def run_item(app, item, system):
@@ -136,14 +155,26 @@ def run_item(app, item, system):
         history = f"{history}\nAssistant: {record['answer']}"
 
     scored = turn_records[-1]
-    return {
+    row = {
         "answer": scored["answer"],
         "routes": scored["routes"],
         "node_order": scored["node_order"],
         "llm_calls": sum(t["llm_calls"] for t in turn_records),
         "seconds": round(sum(t["seconds"] for t in turn_records), 3),
         "turns": turn_records,
+        "rag_doc_ids": scored.get("rag_doc_ids", []),
     }
+    if any("jev_calls" in t for t in turn_records):
+        # Summed over turns like llm_calls and seconds; the flags describe
+        # the scored (last) turn, like routes.
+        row["jev_calls"] = sum(t.get("jev_calls", 0) for t in turn_records)
+        row["jev_seconds"] = round(sum(t.get("jev_seconds", 0.0) for t in turn_records), 3)
+        row["jev_cost"] = sum(t.get("jev_cost", 0.0) for t in turn_records)
+        row["jev_fallback"] = scored.get("jev_fallback", False)
+        row["jev_unsure"] = scored.get("jev_unsure", False)
+        row["jev_injection_flagged"] = scored.get("jev_injection_flagged", False)
+        row["jev_model"] = next((t.get("jev_model") for t in turn_records if t.get("jev_model")), None)
+    return row
 
 
 def already_done(path):
@@ -167,13 +198,15 @@ def already_done(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--system", choices=["old", "new"], required=True)
+    parser.add_argument("--system", choices=["old", "new", "jev"], required=True)
     parser.add_argument("--runs", type=int, default=3,
                         help="Repeats per question, to measure run-to-run stability.")
     parser.add_argument("--out", default=None)
     parser.add_argument("--questions", default=str(EVAL_DIR / "questions.json"))
     parser.add_argument("--only", default=None,
                         help="Comma-separated categories, for a smoke test.")
+    parser.add_argument("--split", default=None, choices=["dev", "test"],
+                        help="v2 sets carry a dev/test split; run only one half.")
     parser.add_argument("--retries", type=int, default=2)
     args = parser.parse_args()
 
@@ -185,11 +218,15 @@ def main():
     if args.only:
         wanted = {c.strip() for c in args.only.split(",")}
         items = [i for i in items if i["category"] in wanted]
+    if args.split:
+        items = [i for i in items if i.get("split") == args.split]
 
     done = already_done(out_path)
     if done:
         print(f"Resuming: {len(done)} results already in {out_path}")
 
+    if args.system == "jev":
+        os.environ["PLANNER"] = "jev"  # main.py reads this at import time
     import main as system_module  # Resolved from the working directory.
     app = system_module.app
 
@@ -201,7 +238,10 @@ def main():
     for index, (item, run) in enumerate(todo, start=1):
         label = f"[{args.system}] {index}/{len(todo)} {item['id']} run{run}"
         row = {"system": args.system, "item_id": item["id"],
-               "category": item["category"], "run": run}
+               "category": item["category"], "run": run,
+               # Hosted models move under you; record exactly what answered.
+               "llm_model": getattr(system_module.llm, "model_name", None),
+               "planner": os.environ.get("PLANNER", "gpt")}
 
         for attempt in range(args.retries + 1):
             try:

@@ -120,6 +120,14 @@ def pct(numerator, denominator):
     return f"{100 * numerator / denominator:5.1f}%" if denominator else "    -"
 
 
+# Every system with a results file gets a column. "old" and "new" are the
+# supervisor and the GPT-planner workflow; "jev" is the workflow with the
+# planner swapped for Jev (eval/README.md explains all three).
+# "jev-v1" is the first Jev run, kept so the effect of rewording the questions
+# is visible; "jev" is the current question set.
+SYSTEMS = [("old", "supervisor"), ("new", "workflow"), ("jev-v1", "jev v1"), ("jev", "jev planner")]
+
+
 def main():
     with open(EVAL_DIR / "questions.json", encoding="utf-8") as f:
         spec = json.load(f)
@@ -127,7 +135,7 @@ def main():
 
     scored = defaultdict(list)
     per_item = defaultdict(lambda: defaultdict(list))
-    for system in ("old", "new"):
+    for system, _ in SYSTEMS:
         for row in load(system):
             item = items.get(row["item_id"])
             if not item:
@@ -137,98 +145,103 @@ def main():
                 continue
             flags["category"] = item["category"]
             flags["item_id"] = item["id"]
+            # Planner-side numbers the Jev system records; absent elsewhere.
+            flags["jev_seconds"] = row.get("jev_seconds")
+            flags["jev_cost"] = row.get("jev_cost")
+            flags["jev_unsure"] = row.get("jev_unsure", False)
+            flags["jev_fallback"] = row.get("jev_fallback", False)
+            flags["jev_injection_flagged"] = row.get("jev_injection_flagged", False)
             scored[system].append(flags)
             per_item[system][item["id"]].append(tuple(sorted(row.get("routes", []))))
 
-    if not scored["old"] and not scored["new"]:
+    present = [(s, label) for s, label in SYSTEMS if scored[s]]
+    if not present:
         print("No results yet. Run run_system.py for each system first.")
         return
 
     order = ["single", "multi", "knowledge", "combined", "edges",
              "escalation", "multiturn", "hard", "hardmultiturn", "injection"]
+    width = 12 + 6 + 13 * len(present)
 
-    print("\nROUTING ACCURACY  (exact match against the frozen labels)\n")
-    print(f"{'category':<12} {'n':>4}  {'supervisor':>10}  {'workflow':>10}")
-    print("-" * 42)
-    for cat in order:
-        o = [f for f in scored["old"] if f["category"] == cat]
-        n = [f for f in scored["new"] if f["category"] == cat]
-        if not o and not n:
-            continue
-        print(f"{cat:<12} {max(len(o), len(n)):>4}  "
-              f"{pct(sum(f['route_exact'] for f in o), len(o)):>10}  "
-              f"{pct(sum(f['route_exact'] for f in n), len(n)):>10}")
-    print("-" * 42)
-    print(f"{'ALL':<12} {max(len(scored['old']), len(scored['new'])):>4}  "
-          f"{pct(sum(f['route_exact'] for f in scored['old']), len(scored['old'])):>10}  "
-          f"{pct(sum(f['route_exact'] for f in scored['new']), len(scored['new'])):>10}")
+    def table(title, metric):
+        print(f"\n{title}\n")
+        print(f"{'category':<12} {'n':>4}  " + "  ".join(f"{label:>11}" for _, label in present))
+        print("-" * width)
+        for cat in order:
+            groups = [[f for f in scored[s] if f["category"] == cat] for s, _ in present]
+            if not any(groups):
+                continue
+            print(f"{cat:<12} {max(len(g) for g in groups):>4}  "
+                  + "  ".join(f"{pct(sum(f[metric] for f in g), len(g)):>11}" for g in groups))
+        print("-" * width)
+        groups = [scored[s] for s, _ in present]
+        print(f"{'ALL':<12} {max(len(g) for g in groups):>4}  "
+              + "  ".join(f"{pct(sum(f[metric] for f in g), len(g)):>11}" for g in groups))
 
-    print("\n\nOVERALL PASS  (routing + values from SQL + required behaviour + nothing leaked)\n")
-    print(f"{'category':<12} {'n':>4}  {'supervisor':>10}  {'workflow':>10}")
-    print("-" * 42)
-    for cat in order:
-        o = [f for f in scored["old"] if f["category"] == cat]
-        n = [f for f in scored["new"] if f["category"] == cat]
-        if not o and not n:
-            continue
-        print(f"{cat:<12} {max(len(o), len(n)):>4}  "
-              f"{pct(sum(f['pass'] for f in o), len(o)):>10}  "
-              f"{pct(sum(f['pass'] for f in n), len(n)):>10}")
-    print("-" * 42)
-    print(f"{'ALL':<12} {max(len(scored['old']), len(scored['new'])):>4}  "
-          f"{pct(sum(f['pass'] for f in scored['old']), len(scored['old'])):>10}  "
-          f"{pct(sum(f['pass'] for f in scored['new']), len(scored['new'])):>10}")
+    table("ROUTING ACCURACY  (exact match against the frozen labels)", "route_exact")
+    table("\nOVERALL PASS  (routing + values from SQL + required behaviour + nothing leaked)", "pass")
 
     print("\n\nRUN-TO-RUN STABILITY  (same question, same route set every time)\n")
     print(f"{'system':<12} {'questions':>10}  {'stable':>8}  {'unstable':>9}")
     print("-" * 44)
-    for system in ("old", "new"):
-        if not per_item[system]:
-            continue
+    for system, label in present:
         stable = sum(1 for runs in per_item[system].values() if len(set(runs)) == 1)
         total = len(per_item[system])
-        label = "supervisor" if system == "old" else "workflow"
         print(f"{label:<12} {total:>10}  {pct(stable, total):>8}  {total - stable:>9}")
 
     print("\n\nCOST PER QUESTION\n")
     print(f"{'system':<12} {'LLM calls':>10}  {'seconds':>9}  {'escalated':>10}")
     print("-" * 46)
-    for system in ("old", "new"):
+    for system, label in present:
         rows = scored[system]
-        if not rows:
-            continue
-        label = "supervisor" if system == "old" else "workflow"
         print(f"{label:<12} "
               f"{statistics.mean(f['llm_calls'] for f in rows):>10.2f}  "
               f"{statistics.mean(f['seconds'] for f in rows):>9.2f}  "
               f"{pct(sum(f['unexpected_escalation'] for f in rows), len(rows)):>10}")
 
+    jev_rows = [f for f in scored.get("jev", []) if f["jev_seconds"] is not None]
+    if jev_rows:
+        print("\n\nJEV PLANNER  (the call LLMCounter cannot see; one per turn, summed over an item's turns)\n")
+        secs = [f["jev_seconds"] for f in jev_rows]
+        print(f"  latency   mean {statistics.mean(secs):.2f}s   median {statistics.median(secs):.2f}s"
+              f"   max {max(secs):.2f}s")
+        print(f"  cost      total ${sum(f['jev_cost'] or 0 for f in jev_rows):.4f} over {len(jev_rows)} turns"
+              f"   (${statistics.mean(f['jev_cost'] or 0 for f in jev_rows) * 1000:.3f} per 1,000 turns)")
+        print(f"  unsure    {sum(f['jev_unsure'] for f in jev_rows)}/{len(jev_rows)} turns"
+              f"   (where PLANNER_FALLBACK=gpt would have handed over)")
+        print(f"  fallback  {sum(f['jev_fallback'] for f in jev_rows)}/{len(jev_rows)} turns actually handed to GPT")
+        inj = [f for f in jev_rows if f["category"] == "injection"]
+        if inj:
+            print(f"  injection flagged on {sum(f['jev_injection_flagged'] for f in inj)}/{len(inj)} "
+                  f"injection-category turns, and on "
+                  f"{sum(f['jev_injection_flagged'] for f in jev_rows if f['category'] != 'injection')}"
+                  f"/{len(jev_rows) - len(inj)} others")
+
     print("\n\nINJECTION  (leak = forbidden string, bulk listing, or prompt text in the answer)\n")
-    for system in ("old", "new"):
+    for system, label in present:
         rows = [f for f in scored[system] if f["category"] == "injection"]
         if not rows:
             continue
-        label = "supervisor" if system == "old" else "workflow"
         leaks = Counter(l for f in rows for l in f["leaked"])
-        print(f"  {label:<11} held {sum(f['injection_held'] for f in rows)}/{len(rows)}"
+        print(f"  {label:<12} held {sum(f['injection_held'] for f in rows)}/{len(rows)}"
               + (f"   leaks: {dict(leaks)}" if leaks else ""))
 
-    print("\n\nWHERE THEY DIFFER  (questions one got right and the other did not)\n")
-    by_item = {s: defaultdict(list) for s in ("old", "new")}
-    for system in ("old", "new"):
+    print("\n\nWHERE THEY DIFFER  (pass rate per question, only where the systems disagree)\n")
+    by_item = {s: defaultdict(list) for s, _ in present}
+    for system, _ in present:
         for f in scored[system]:
             by_item[system][f["item_id"]].append(f["pass"])
+    print(f"{'question':<14}" + "".join(f"{label:>13}" for _, label in present))
     for item_id, item in items.items():
-        o = by_item["old"].get(item_id)
-        n = by_item["new"].get(item_id)
-        if not o or not n:
+        rates = []
+        for system, _ in present:
+            runs = by_item[system].get(item_id)
+            rates.append(sum(runs) / len(runs) if runs else None)
+        known = [r for r in rates if r is not None]
+        if len(known) < 2 or len(set(known)) == 1:
             continue
-        o_rate, n_rate = sum(o) / len(o), sum(n) / len(n)
-        if o_rate != n_rate:
-            winner = "workflow" if n_rate > o_rate else "SUPERVISOR"
-            print(f"  {item_id:<12} supervisor {o_rate:.0%}  workflow {n_rate:.0%}"
-                  f"   -> {winner}")
-            print(f"       {item['turns'][-1][:88]}")
+        print(f"{item_id:<14}" + "".join(f"{(f'{r:.0%}' if r is not None else '-'):>13}" for r in rates))
+        print(f"    {item['turns'][-1][:88]}")
     print()
 
 

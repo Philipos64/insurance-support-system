@@ -1,0 +1,44 @@
+[
+ {
+  "base_id": "multiturn_switch_to_faq-06",
+  "style": "typos",
+  "why": "identical",
+  "turns": [
+   "how much do i owe on POL000708??",
+   "wat does comprhensive cover?"
+  ]
+ },
+ {
+  "base_id": "policy_type-05",
+  "style": "indirect",
+  "why": "ids changed",
+  "turns": [
+   "I'm trying to sort out some details about one of my policies before I make a decision. I have the policy number here, POL000236, but I'm not entirely sure what kind of policy it actually is. Could you tell me what type of policy POL000236 is?"
+  ]
+ },
+ {
+  "base_id": "multiturn_followup_claims-03",
+  "style": "casual",
+  "why": "identical",
+  "turns": [
+   "hey quick q, is POL000023 active rn?",
+   "and are there any claims on it?"
+  ]
+ },
+ {
+  "base_id": "policy_owner-06",
+  "style": "indirect",
+  "why": "ids changed",
+  "turns": [
+   "I'm trying to sort out some details on a policy I have on file, POL001119, and before anything else I need to confirm something basic about it. So, who is the owner of POL001119?"
+  ]
+ },
+ {
+  "base_id": "policy_owner-12",
+  "style": "casual",
+  "why": "ids changed",
+  "turns": [
+   "hey quick q, who owns pol000265?"
+  ]
+ }
+]

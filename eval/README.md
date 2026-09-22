@@ -8,6 +8,16 @@ agent that re-read the whole conversation each turn and picked a specialist. The
 current version replaces that with a planner, a JSON plan and a dispatcher.
 `docs/design-notes.md` argues the second is better. This measures it.
 
+## A third system
+
+`--system jev` runs the current graph with the planner swapped for TypeSafe's
+Jev, a model that answers typed yes/no questions instead of writing text
+(`jev_planner.py`, `PLANNER=jev`). Everything after the planner is the same
+code, so the comparison isolates the planner. `results/jev-v1.jsonl` is the
+first question wording, `results/jev.jsonl` the reworded one; `score.py`
+shows both. Because that rewording was done by reading failures on this set,
+the number to trust is the held-out one in `eval/v2/`.
+
 ## What makes the comparison fair
 
 Both versions read the same PostgreSQL container, the same seeded data, and the
