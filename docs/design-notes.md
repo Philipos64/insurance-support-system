@@ -193,7 +193,55 @@ red-teaming, no published attack set, no automated tests. What I can say is that
 paths from the supervisor version are closed by the structure, and nothing I've tried by hand has
 changed the output or the data.
 
-## 5. What doesn't work
+## 5. Swapping the planner for typed decisions
+
+Section 3 says the design locks down everything after the planner. That leaves the planner itself
+as the only part that still reads user text and decides something, which makes it the part worth
+attacking next.
+
+The JSON planner has to do two jobs in one call. It has to decide what the request needs, and it
+has to express that decision as parseable JSON. The second job is not free. It costs a call that
+has to be long enough to produce a structured object, and the failure I describe in section 6, a
+two-part question getting a one-step plan, is a failure of the writing rather than the deciding.
+
+So I tried taking the writing away. `jev_planner.py` asks seven yes-or-no questions with a
+confidence on each:
+
+```
+needs_policy      needs_billing      needs_claims      needs_faq
+coverage_is_general      wants_human      is_injection
+```
+
+They go to Jev, a typed-decision model, in one call through OpenRouter's Decisions endpoint. The
+answers come back as typed fields with confidences, and plain Python turns them into a plan against
+fixed thresholds: 0.5 for a lookup, 0.7 for a human handoff or an injection flag. IDs are pulled
+out with a regex before the call, so no model writes them.
+
+Nothing downstream changed. `_plan_with_jev` returns the same plan structure `_plan_with_gpt` does,
+and the dispatcher, the workers, the SQL and the answer agent are the same code either way. That
+was the point: it makes the two planners a controlled comparison rather than two systems.
+
+It scores better, on the half of the eval it was never tuned against: 96.3% against 92.6%, at about
+half the model calls. The evaluation write-up has the numbers and the paired test.
+
+Two things about it are worth saying plainly.
+
+**The gain is mostly about not forgetting.** The slices that move are the ones where the JSON
+planner had to remember to write a second step. Lookup plus FAQ goes from 53.3% to 98.9%. A typed
+field for "does this need the FAQ store" is harder to drop than a line of JSON.
+
+**It is not the default, and the reason is not the score.** `PLANNER` defaults to `gpt`. The
+Decisions endpoint is alpha and the model string is a dated build that can move under me. Both are
+recorded on every result row so a number can always be tied to what produced it, but neither is
+something I want a person cloning this repo to depend on. `PLANNER=jev` switches it.
+
+It is also worse in three places, all of which are in the question set rather than the
+architecture. Swedish paraphrases are the worst: the criteria are written in English and describe
+English phrasings, so a Swedish question is judged against a description that does not quite fit.
+Off-topic questions sometimes get a lookup planned, because there is no typed question for "is this
+about insurance at all". Questions with no ID get a lookup that cannot run.
+
+## 6. What doesn't work
 
 **Two-part questions sometimes get half a plan.** The planner will write one step for a question
 that needs two:
@@ -253,7 +301,7 @@ wrong thing to say to someone who is behind. POL000005 is that case. The eval fo
 estimated loss and incident type, and not the policy number. So "which policy is this claim on" has
 no answer, in either version.
 
-## 6. How I tested it
+## 7. How I tested it
 
 By running queries and reading the whole trace: each routing decision with the reason it gave, the
 SQL each worker ran, and the documents RAG pulled back.
@@ -274,6 +322,13 @@ step marked as an API call or local code. If I had to debug something like the s
 again, that's what I'd use.
 
 Reading traces is still how I find things, but it isn't how I check them any more. There's a fixed
-set of 69 questions now, with the expected routing written down before anything ran, and both
-versions are scored on it. The supervisor loop in section 1 is one of the questions, and it
-reproduces every time. [evaluation.md](evaluation.md) has the numbers and `eval/` has the harness.
+set of 443 questions now, filled from real database rows so the expected answer comes from the same
+place the system has to get it, and all three versions are scored on it. It is split in half, and
+the half I report on is the half I did not read while I was changing things. The supervisor loop in
+section 1 is one of the questions, and it reproduces every time. [evaluation.md](evaluation.md) has
+the numbers, [experiments.md](experiments.md) logs every run, and `eval/` has the harness.
+
+The first version of that set was 69 questions I wrote by hand. It found real bugs and it settled
+the supervisor question, but it was too small to put an interval on anything, and I had written
+every question myself. Replacing it was the most useful thing I did to this project after the
+rewrite itself.

@@ -44,36 +44,74 @@ plan-and-execute workflow. I think giving up the autonomy was worth it, and
 work well.
 
 I kept the supervisor version running so I could check that, instead of just asserting it. Both
-versions answer the same 69 questions below.
+versions answer the same 443 questions below.
 
 ## Does the rewrite actually work better
 
-I ran both versions on the same 69 questions, three times each, against the same database and the
-same model. 414 runs. Routing means the request reached exactly the right workers. Pass means that
-plus the right values out of the database and nothing leaked.
+I ran both versions on the same 443 questions, three times each, against the same database and the
+same model. 1,329 runs each. Routing means the request reached exactly the right workers. Pass
+means that plus the right values out of the database and nothing leaked.
 
 | | Supervisor | This version |
 |---|---|---|
-| Routing correct | 65.7% | **90.3%** |
-| Pass | 47.8% | **89.9%** |
-| Same route every run | 89.9% | **97.1%** |
-| Model calls per question | 3.80 | **2.61** |
-| Seconds per question | 4.29 | **3.17** |
-| Escalated without being asked | 6.8% | **0.0%** |
-| Injection attempts held | 27 of 36 | **36 of 36** |
+| Routing correct | 70.3% | **92.8%** |
+| Pass | 62.4% | **92.1%** |
+| 95% interval on pass | [59.7, 65.0] | **[90.6, 93.5]** |
+| Model calls per question | 3.14 | **2.22** |
+| Seconds per question | 3.85 | **2.81** |
+| Escalated without being asked | 0.8% | **0.0%** |
+| Injection attempts held | 18 of 36 | **36 of 36** |
+
+Every question is seen by both versions, so the comparison is paired. They disagree on 408 runs,
+and the rewrite is the one that is right on 399 of them. McNemar's exact test puts that at
+p < 0.0001.
 
 The supervisor went back to the same worker inside one turn on a quarter of its runs, and hit the
-iteration cap 14 times on questions it should have answered. Asked plainly for a human it got it
-right zero times out of nine. This version never escalated unless it was asked to.
+iteration cap on questions it should have answered. Asked plainly for a human across 42 runs it got
+it right zero times. This version never escalated unless it was asked to.
 
 It is also cheaper, which I did not expect. I thought I was trading cost for predictability. The
 supervisor spends model calls re-deciding things it already decided.
 
-Ground truth comes out of PostgreSQL, not a second model judging answers, and the labels were
-written before either version ran. Four questions the supervisor gets right and this one doesn't
-are listed in the write-up, along with two real bugs the eval found that are in both versions.
-[docs/evaluation.md](docs/evaluation.md) has the full tables, and `eval/` has everything needed to
-run it again.
+Ground truth comes out of PostgreSQL, not a second model judging answers. The questions are filled
+from real database rows, so the expected answer comes from the same place the system has to get it.
+[docs/evaluation.md](docs/evaluation.md) has the full tables, the per-slice breakdown and the
+places this version still loses, and `eval/` has everything needed to run it again.
+
+An earlier version of this eval was 69 questions I wrote by hand. It is still in `eval/`, and the
+evaluation write-up explains why I replaced it. The short reason is that 69 questions is too few to
+put an interval on anything, and I had written all of them myself.
+
+## A second planner, built on typed decisions
+
+The planner is the only part that still reads user text, so it is the part worth improving. I built
+a second one on [Jev](https://openrouter.ai/typesafe/jev-1.13), a typed-decision model, and left
+everything after it alone.
+
+Instead of asking a model to write JSON, it asks seven yes-or-no questions with confidence
+attached: does this need a policy lookup, billing, claims, the FAQ store, is the coverage question
+a general one, does the person want a human, is this an injection attempt. Python turns the answers
+into a plan against fixed thresholds. IDs come out with a regex before the call, rather than being
+written by a model.
+
+On the held-out half of the eval, 220 questions it was never tuned against:
+
+| | JSON planner | Jev planner |
+|---|---|---|
+| Pass | 92.6% | **96.3%** |
+| Routing correct | 92.8% | **96.6%** |
+| Model calls per question | 2.19 | **1.18** |
+| FAQ document in the top 4 | 71.6% | **90.2%** |
+
+p = 0.005 on the paired test. It is better and it costs about half as many model calls, because one
+typed call replaces a planning call that had to produce parseable JSON.
+
+It is not the default. `PLANNER` defaults to `gpt`, so the repo runs with only an OpenAI key. Jev
+is reached through an alpha endpoint and the model string is a dated build, and I would rather this
+keep working for someone who clones it than show off the better number. Set `PLANNER=jev` to switch.
+
+It is also worse in three specific places, which the evaluation write-up lists: Swedish
+paraphrases, off-topic questions, and questions with no ID in them.
 
 ## How it works
 
@@ -111,8 +149,14 @@ into an unrelated lookup, because it isn't there to leak.
 
 The policy, billing and claims workers are a regex plus one parameterised `SELECT`. If the ID isn't
 in the database they say so instead of making something up. The RAG specialist searches a ChromaDB
-store of about a thousand insurance FAQ entries. The planner gives it keywords instead of a
-question, so it can search straight away instead of spending another API call rewriting the query.
+store of about a thousand insurance FAQ entries.
+
+The JSON planner gives it keywords instead of a question, so it can search straight away instead of
+spending another API call rewriting the query. I used to describe that as a straight saving. The
+eval says it isn't: searching with the user's own message, with IDs stripped, finds the right
+document in the top 4 on 90.2% of runs against 71.6% for the keywords. Compressing the question to
+keywords throws away the wording the embedding needed. The Jev planner searches with the raw
+message for that reason, and this is the fix I would make to the JSON planner next.
 
 ## Running it
 
@@ -132,6 +176,11 @@ python api.py
 
 Then open <http://localhost:8000>. If the database won't connect, `python test_connection.py`
 checks just that.
+
+That runs the JSON planner, which needs nothing but the OpenAI key. To run the Jev planner instead,
+put an `OPENROUTER_API_KEY` in `.env` and start it with `PLANNER=jev python api.py`. The developer
+view shows which planner answered, and the Inspect panel on the planner step shows the seven typed
+questions with the confidence that came back for each.
 
 The Postgres container is bound to `127.0.0.1`, so it's only reachable from your own machine. The
 username and password in `.env.example` aren't secrets, they just have to match `docker-compose.yml`
@@ -179,8 +228,10 @@ after every node if you want all of it.
 ## What's in here
 
 ```
-main.py             the LangGraph workflow, 8 nodes, state, routing
+main.py             the LangGraph workflow, 8 nodes, state, routing, the PLANNER switch
 prompts.py          prompts for the planner, RAG specialist and answer agent
+jev_planner.py      the typed questions, thresholds and rules that build a plan from Jev's answers
+jev_client.py       the OpenRouter Decisions call, the whole integration surface
 agent_tools.py      the SQL lookups
 database.py         tables and fake data
 setup_rag.py        builds the ChromaDB FAQ store
@@ -191,19 +242,29 @@ docker-compose.yml  PostgreSQL 17 + pgvector
 requirements.txt    pinned versions
 architecture.png    the data-flow diagram above
 data/               demo FAQs and the example questions
+tests/              unit tests, run with PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/
+eval/               the first 69-question set and its results
+eval/v2/            the 443-question set, how it was built, and the results
 docs/design-notes.md  why it's built this way, and what still doesn't work
+docs/evaluation.md    the full eval write-up, all three versions
+docs/experiments.md   a running log of every eval run and what it said
 ```
 
 ## What doesn't work
 
 The full list is in [docs/design-notes.md](docs/design-notes.md). The short version:
 
-The planner sometimes only plans half of a two-part question. Ask for a bill and how to pay it, and
-you'll often get the bill plus "I don't have information about that". That group scores 33.3%, the
-worst on the eval, so it's the thing I'd fix next.
+The JSON planner sometimes only plans half of a two-part question. Ask for a bill and how to pay
+it, and you'll often get the bill plus "I don't have information about that". That slice scores
+53.3%, the worst on the eval. The Jev planner takes it to 98.9%, which is most of the reason I
+built it.
 
-"Tell me about my coverage" goes to the policy worker and asks for a policy number, when it should
-go to the FAQ store. The supervisor version got that one right and this one doesn't.
+Questions with no ID in them, like "is my policy active", go to a worker that then has nothing to
+look up. Both planners do this, and the Jev one does it more.
+
+The Jev planner is worse on Swedish, at 70% against 100% on the held-out half. The typed questions
+are written in English and describe English phrasings, so a Swedish question gets judged against a
+description that doesn't quite fit it.
 
 Billing only looks at pending rows, so someone with overdue bills and nothing pending is told there
 is no pending bill. The eval found that and it's a real bug.
